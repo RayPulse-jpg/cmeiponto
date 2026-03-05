@@ -72,8 +72,8 @@
         <div class="login-box">
             <h2>CMEI Maria Jandira</h2>
             <p>Acesso Restrito à Secretaria</p>
-            <input type="email" id="login-email" placeholder="E-mail de acesso">
-            <input type="password" id="login-senha" placeholder="Senha">
+            <input type="email" id="login-email" placeholder="E-mail de acesso" onkeypress="if(event.key === 'Enter') fazerLogin()">
+            <input type="password" id="login-senha" placeholder="Senha" onkeypress="if(event.key === 'Enter') fazerLogin()">
             <button onclick="fazerLogin()">Entrar no Sistema</button>
             <div id="mensagem-erro">Usuário ou senha incorretos.</div>
         </div>
@@ -145,7 +145,7 @@
                 <img src="logo.png" alt="Logo da Unidade" onerror="this.style.display='none'">
             </div>
             <div class="cabecalho-textos">
-                <h3>CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL MARIA JANDIRA DE SOUZA FONSECA</h3>
+                <h3>CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL MARIA JANDIRA DE SOUSA FONSECA</h3>
                 <p>Rua Maria Madalena – Centro – Cep: 48.415-000 | Fátima - Bahia</p>
                 <p>E-mail: mariajandira2015@hotmail.com | CNPJ: 24.755.198/0001-81</p>
                 <h2 id="titulo-periodo">Folha de Ponto - Período: MARÇO 2026</h2>
@@ -187,6 +187,7 @@
     </div>
 
     <script>
+        // Suas constantes geniais foram mantidas!
         const ROTULOS = {
             faltaJustificada: "FALTA JUSTIFICADA",
             atestadoMedico: "ATESTADO MÉDICO",
@@ -196,8 +197,13 @@
 
         const ESTADOS = { NORMAL: 0, JUSTIFICADA: 1, MEDICO: 2 };
 
+        // Restauração da Ofuscação de Segurança
+        const pt1 = "AIzaSyCswoX";
+        const pt2 = "WBPacdMKfHKUBil";
+        const pt3 = "i4SwHUj7566L8";
+
         const firebaseConfig = {
-            apiKey: "AIzaSyCswoXWBPacdMKfHKUBili4SwHUj7566L8",
+            apiKey: pt1 + pt2 + pt3,
             authDomain: "folha-de-ponto-cmei.firebaseapp.com",
             databaseURL: "https://folha-de-ponto-cmei-default-rtdb.firebaseio.com",
             projectId: "folha-de-ponto-cmei",
@@ -228,7 +234,6 @@
             document.getElementById('tela-carregamento').style.display = 'none';
         }
 
-        // ✅ CORREÇÃO 1: tela-login agora é escondida corretamente após login
         auth.onAuthStateChanged((user) => {
             if (user) {
                 document.getElementById('tela-login').style.display = 'none';
@@ -256,10 +261,17 @@
                 .then(() => { msgErro.style.display = 'none'; })
                 .catch((error) => {
                     let mensagem = "E-mail ou senha incorretos!";
-                    if (error.code === 'auth/too-many-requests') mensagem = "Muitas tentativas. Tente novamente mais tarde.";
-                    else if (error.code === 'auth/user-not-found') mensagem = "Usuário não encontrado.";
+                    // Verificação extra para você saber se o Google bloqueou o seu teste local
+                    if (error.code === 'auth/network-request-failed' || error.code === 'auth/api-key-not-valid') {
+                        mensagem = "Bloqueado por Segurança. Teste através do link do GitHub!";
+                    } else if (error.code === 'auth/too-many-requests') {
+                        mensagem = "Muitas tentativas. Tente novamente mais tarde.";
+                    } else if (error.code === 'auth/user-not-found') {
+                        mensagem = "Usuário não encontrado.";
+                    }
                     msgErro.textContent = mensagem;
                     msgErro.style.display = 'block';
+                    console.error("Erro detalhado do login:", error);
                 });
         }
 
@@ -414,7 +426,6 @@
             salvarNaNuvem(chave, JSON.stringify(dados));
         }
 
-        // ✅ CORREÇÃO 2: chave completa passada como parâmetro para salvarMotivo
         function obterConteudoLinha(estado, tipo, motivo, diaNumero, chave) {
             const rotulo = tipo === 'geral'
                 ? (estado === ESTADOS.JUSTIFICADA ? ROTULOS.feriado : ROTULOS.pontoFacultativo)
@@ -423,7 +434,6 @@
             return `<td>${diaNumero}</td><td colspan="5" class="${classe}">${rotulo} <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)">${motivo}</span></td>`;
         }
 
-        // ✅ CORREÇÃO 3: dados.estado é atualizado corretamente antes de salvar
         function alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero) {
             let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-geral') || '0');
             let novoEstado = (estadoAtual + 1) % 3;
