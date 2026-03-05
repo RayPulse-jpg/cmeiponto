@@ -24,12 +24,12 @@
         .btn-add { background-color: #38a169; padding: 8px 10px; } .btn-add:hover { background-color: #2f855a; }
         .btn-del { background-color: #e53e3e; padding: 8px 10px; } .btn-del:hover { background-color: #c53030; }
         .btn-backup { background-color: #4a5568; } .btn-backup:hover { background-color: #2d3748; }
+        .btn-sair { background-color: #e53e3e; padding: 8px 15px; margin-left: 15px; } .btn-sair:hover { background-color: #c53030; }
 
         /* Estilos da Folha */
         .folha-container { background-color: #fff; padding: 20px 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 900px; box-sizing: border-box; }
         .cabecalho-container { display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 15px; min-height: 80px; }
         
-        /* Ajuste do Logo para o Botão Secreto */
         .cabecalho-logo { position: absolute; left: 0; top: 0; cursor: pointer; min-width: 80px; min-height: 80px; } 
         .cabecalho-logo img { max-width: 80px; max-height: 80px; object-fit: contain; pointer-events: none; }
         
@@ -61,7 +61,17 @@
         .modal-content h3 { margin: 0 0 10px 0; color: #2d3748; text-align: center; } .modal-content input { padding: 10px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 14px; }
         .modal-botoes { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; } .modal-botoes button { flex: 1; } .btn-cancelar { background-color: #e53e3e; } .btn-cancelar:hover { background-color: #c53030; }
         
-        #tela-carregamento { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f4f9; display: flex; justify-content: center; align-items: center; z-index: 9999; font-size: 20px; font-weight: bold; color: #3182CE; }
+        #tela-carregamento { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f4f9; justify-content: center; align-items: center; z-index: 9999; font-size: 20px; font-weight: bold; color: #3182CE; }
+
+        /* 👇 ESTILOS DA NOVA TELA DE LOGIN 👇 */
+        #tela-login { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2d3748; display: flex; justify-content: center; align-items: center; z-index: 10000; }
+        .login-box { background: white; padding: 40px 30px; border-radius: 10px; box-shadow: 0 15px 25px rgba(0,0,0,0.3); width: 100%; max-width: 350px; text-align: center; }
+        .login-box h2 { margin: 0 0 5px 0; color: #1a202c; font-size: 22px; }
+        .login-box p { margin: 0 0 20px 0; color: #718096; font-size: 14px; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e0; border-radius: 5px; font-size: 14px; box-sizing: border-box; }
+        .login-box button { width: 100%; padding: 12px; background-color: #3182CE; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+        .login-box button:hover { background-color: #2B6CB0; }
+        #mensagem-erro { color: #e53e3e; font-size: 13px; margin-top: 10px; font-weight: bold; display: none; }
 
         /* Área do Lote de Impressão */
         #print-wrapper { display: none; width: 100%; } .quebra-pagina { page-break-after: always; margin-bottom: 20px; }
@@ -69,7 +79,7 @@
         /* Regras Rigorosas de Impressão */
         @media print {
             body { background-color: #fff; padding: 0; margin: 0; } @page { margin: 1cm; }
-            .controles, .controles-avancados, .aviso-clique, .modal-overlay, #tela-carregamento { display: none !important; }
+            .controles, .controles-avancados, .aviso-clique, .modal-overlay, #tela-carregamento, #tela-login { display: none !important; }
             .editavel { background-color: transparent; border: none; padding: 0; } .dia-util { cursor: default; } .motivo-feriado { border: none; } .motivo-feriado:empty:before { content: ""; }
             body.modo-lote #folha-impressao { display: none !important; } body.modo-lote #print-wrapper { display: block !important; }
             body:not(.modo-lote) #folha-impressao { display: block !important; box-shadow: none; padding: 0; border: none; } body:not(.modo-lote) #print-wrapper { display: none !important; }
@@ -77,6 +87,17 @@
     </style>
 </head>
 <body>
+
+    <div id="tela-login">
+        <div class="login-box">
+            <h2>CMEI Maria Jandira</h2>
+            <p>Acesso Restrito à Secretaria</p>
+            <input type="email" id="login-email" placeholder="E-mail de acesso">
+            <input type="password" id="login-senha" placeholder="Senha">
+            <button onclick="fazerLogin()">Entrar no Sistema</button>
+            <div id="mensagem-erro">Usuário ou senha incorretos.</div>
+        </div>
+    </div>
 
     <div id="tela-carregamento">☁️ Conectando ao Banco de Dados CMEI...</div>
 
@@ -103,6 +124,7 @@
         </select>
 
         <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Atual</button>
+        <button class="btn-sair" onclick="fazerLogout()" title="Sair com Segurança">Sair 🔒</button>
     </div>
 
     <div class="controles-avancados">
@@ -199,39 +221,90 @@
         
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const auth = firebase.auth();
 
         let memoriaNuvem = {};
         let bancoServidores = [];
 
-        // 👇 AQUI ACONTECE O LOGIN INVISÍVEL ANTES DE PUXAR OS DADOS 👇
-        window.onload = function() {
-            firebase.auth().signInAnonymously().then(() => {
+        // ----------------------------------------------------
+        // 2. LÓGICA DE LOGIN E AUTENTICAÇÃO
+        // ----------------------------------------------------
+        
+        // Verifica se a pessoa já está logada quando entra no site
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // Se tem crachá válido, esconde o login e mostra a tela de carregamento
+                document.getElementById('tela-login').style.display = 'none';
+                document.getElementById('tela-carregamento').style.display = 'flex';
+                carregarDadosDaNuvem();
+            } else {
+                // Se não tem crachá, mostra o login
+                document.getElementById('tela-login').style.display = 'flex';
+                document.getElementById('tela-carregamento').style.display = 'none';
                 
-                database.ref('cmei_dados').once('value').then((snapshot) => {
-                    memoriaNuvem = snapshot.val() || {};
-                    
-                    if(memoriaNuvem['listaServidores']) {
-                        bancoServidores = JSON.parse(memoriaNuvem['listaServidores']);
-                    } else {
-                        bancoServidores = [{ nome: "FERNANDA DE JESUS ALMEIDA", cpf: "049.131.865-07", cargo: "AUXILIAR DE COORDENAÇÃO" }];
-                    }
+                // Limpa a tela de trás por segurança
+                document.getElementById('corpo-tabela').innerHTML = '';
+            }
+        });
 
-                    document.getElementById('tela-carregamento').style.display = 'none'; 
-                    carregarListaServidores(); 
-                    carregarDadosEditaveis();
-                    gerarFolha();
-                }).catch((erro) => {
-                    alert("Erro ao conectar no banco de dados. Verifique a internet e recarregue a página.");
-                    console.error(erro);
+        // Função chamada pelo botão "Entrar"
+        function fazerLogin() {
+            const email = document.getElementById('login-email').value;
+            const senha = document.getElementById('login-senha').value;
+            const msgErro = document.getElementById('mensagem-erro');
+
+            if (!email || !senha) {
+                msgErro.innerText = "Preencha o e-mail e a senha.";
+                msgErro.style.display = 'block';
+                return;
+            }
+
+            auth.signInWithEmailAndPassword(email, senha)
+                .then(() => {
+                    msgErro.style.display = 'none';
+                    // O onAuthStateChanged lá em cima vai assumir o controle agora!
+                })
+                .catch((error) => {
+                    msgErro.innerText = "E-mail ou senha incorretos!";
+                    msgErro.style.display = 'block';
+                    console.error("Erro no login:", error);
                 });
+        }
 
+        // Função chamada pelo botão "Sair"
+        function fazerLogout() {
+            auth.signOut().then(() => {
+                // Limpa a memória local
+                memoriaNuvem = {};
+                bancoServidores = [];
+                document.getElementById('login-senha').value = '';
             }).catch((error) => {
-                // Se alguém acessar de fora e o Google negar o crachá, a tela trava aqui!
-                document.getElementById('tela-carregamento').innerText = "🚫 Acesso Negado pelo Servidor de Segurança.";
-                document.getElementById('tela-carregamento').style.color = "red";
-                console.error("Erro de segurança: ", error);
+                console.error("Erro ao sair:", error);
             });
-        };
+        }
+
+        // ----------------------------------------------------
+        // 3. CARREGAMENTO DOS DADOS (SÓ RODA SE LOGADO)
+        // ----------------------------------------------------
+        function carregarDadosDaNuvem() {
+            database.ref('cmei_dados').once('value').then((snapshot) => {
+                memoriaNuvem = snapshot.val() || {};
+                
+                if(memoriaNuvem['listaServidores']) {
+                    bancoServidores = JSON.parse(memoriaNuvem['listaServidores']);
+                } else {
+                    bancoServidores = [{ nome: "FERNANDA DE JESUS ALMEIDA", cpf: "049.131.865-07", cargo: "AUXILIAR DE COORDENAÇÃO" }];
+                }
+
+                document.getElementById('tela-carregamento').style.display = 'none'; 
+                carregarListaServidores(); 
+                carregarDadosEditaveis();
+                gerarFolha();
+            }).catch((erro) => {
+                alert("Erro ao conectar no banco de dados. Verifique a internet e recarregue a página.");
+                console.error(erro);
+            });
+        }
 
         function salvarNaNuvem(chave, valor) {
             memoriaNuvem[chave] = valor; 
@@ -255,7 +328,7 @@
         }
 
         // ----------------------------------------------------
-        // 2. SISTEMA DE SERVIDORES
+        // 4. SISTEMA DE SERVIDORES
         // ----------------------------------------------------
         function carregarListaServidores() {
             const seletor = document.getElementById('seletor-servidor');
@@ -306,7 +379,7 @@
         }
 
         // ----------------------------------------------------
-        // 3. LÓGICA DE FERIADOS E FALTAS 
+        // 5. LÓGICA DE FERIADOS E FALTAS 
         // ----------------------------------------------------
         function salvarDadosEditaveis() {
             const campos = document.querySelectorAll('.editavel');
@@ -418,7 +491,7 @@
         }
 
         // ----------------------------------------------------
-        // 4. IMPRESSÃO EM LOTE E BACKUP
+        // 6. IMPRESSÃO EM LOTE E BACKUP
         // ----------------------------------------------------
         function imprimirTodosLote() {
             if(bancoServidores.length === 0) { alert("A lista de servidores está vazia!"); return; }
