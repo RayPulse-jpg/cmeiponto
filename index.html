@@ -23,6 +23,7 @@
         .btn-add { background-color: #38a169; padding: 8px 10px; } .btn-add:hover { background-color: #2f855a; }
         .btn-del { background-color: #e53e3e; padding: 8px 10px; } .btn-del:hover { background-color: #c53030; }
         .btn-backup { background-color: #4a5568; } .btn-backup:hover { background-color: #2d3748; }
+        .btn-excel { background-color: #38a169; } .btn-excel:hover { background-color: #2f855a; }
         .btn-sair { background-color: #e53e3e; padding: 8px 15px; margin-left: 5px; } .btn-sair:hover { background-color: #c53030; }
         
         .folha-container { background-color: #fff; padding: 20px 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 900px; box-sizing: border-box; }
@@ -45,7 +46,6 @@
         .editavel { background-color: #fffae6; border-bottom: 1px dashed #ccc; cursor: text; padding: 1px 3px; border-radius: 2px; display: inline-block; min-width: 50px; }
         .editavel:focus { background-color: #fff; outline: 2px solid #3182CE; border-bottom: none; }
         
-        /* Novos Estilos para Edição de Rótulos */
         .rotulo-editavel { cursor: text; border-bottom: 1px dashed #999; display: inline-block; min-width: 60px; padding: 0 4px; }
         .motivo-feriado { background-color: transparent; border-bottom: 1px dashed #999; cursor: text; padding: 0 5px; outline: none; font-family: inherit; text-transform: uppercase; display: inline-block; min-width: 30px; }
         .motivo-feriado:empty:before { content: " - CLIQUE PARA DESCREVER"; color: #718096; font-style: italic; font-weight: normal; text-transform: none; }
@@ -80,7 +80,6 @@
             .controles, .controles-avancados, .aviso-clique, .modal-overlay, #tela-carregamento, #tela-login { display: none !important; }
             .editavel { background-color: transparent; border: none; padding: 0; } .dia-util { cursor: default; } 
             
-            /* Tira os pontilhados na impressão para ficar profissional */
             .rotulo-editavel, .motivo-feriado { border: none !important; } 
             .motivo-feriado:empty:before { content: ""; }
             
@@ -128,6 +127,15 @@
             <button class="btn-add" onclick="abrirModal()" title="Cadastrar Novo Servidor">➕</button>
             <button class="btn-del" onclick="removerServidor()" title="Remover Servidor Selecionado">🗑️</button>
         </div>
+        
+        <label for="seletor-turno">Horário:</label>
+        <select id="seletor-turno" onchange="atualizarTurno()" style="font-weight: bold; color: #2B6CB0;">
+            <option value="MANUAL">✏️ Manual</option>
+            <option value="MATUTINO">🌅 Matutino</option>
+            <option value="VESPERTINO">🌇 Vespertino</option>
+            <option value="INTEGRAL">☀️ Integral</option>
+        </select>
+
         <label for="mes">Mês:</label>
         <select id="mes" onchange="gerarFolha()">
             <option value="1">JANEIRO</option> <option value="2">FEVEREIRO</option> <option value="3" selected>MARÇO</option>
@@ -156,7 +164,8 @@
         <button class="btn-lote" onclick="imprimirTodosLote()">🖨️ Imprimir em Lote</button>
         
         <div id="painel-secreto" style="display: none; gap: 15px;">
-            <button class="btn-backup" onclick="exportarBackup()">💾 Exportar Backup em Nuvem</button>
+            <button class="btn-excel" onclick="exportarExcel()">📊 Exportar para Excel</button>
+            <button class="btn-backup" onclick="exportarBackup()">💾 Exportar Backup</button>
             <button class="btn-backup" onclick="document.getElementById('file-import').click()">📂 Restaurar Backup</button>
             <input type="file" id="file-import" style="display: none;" accept=".json" onchange="importarBackup(event)">
         </div>
@@ -174,6 +183,12 @@
                 <option value="B - PROFESSORAS">Professoras</option>
                 <option value="C - MONITORAS">Monitoras</option>
                 <option value="D - EQUIPE DE APOIO">Equipe de Apoio</option>
+            </select>
+            <select id="novo-turno" style="width: 100%;">
+                <option value="MANUAL">Horário: Manual (Em Branco)</option>
+                <option value="MATUTINO">Horário: Matutino (08h-12h)</option>
+                <option value="VESPERTINO">Horário: Vespertino (13h-17h)</option>
+                <option value="INTEGRAL">Horário: Integral (08h-17h)</option>
             </select>
             <div class="modal-botoes">
                 <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
@@ -263,7 +278,6 @@
         let memoriaNuvem = {};
         let bancoServidores = [];
 
-        // FUNÇÃO DE ESCUDO CONTRA ASPAS NOS NOMES (Ex: D'arc)
         function escapeHtml(unsafe) {
             return (unsafe || "").toString()
                  .replace(/&/g, "&amp;")
@@ -345,7 +359,7 @@
                         });
                         if (precisaSalvarNaDescida) { salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores)); }
                     } else {
-                        bancoServidores = [{ nome: "FERNANDA DE JESUS ALMEIDA", cpf: "049.131.865-07", cargo: "AUXILIAR DE COORDENAÇÃO", categoria: "A - ADMINISTRATIVO" }];
+                        bancoServidores = [{ nome: "FERNANDA DE JESUS ALMEIDA", cpf: "049.131.865-07", cargo: "AUXILIAR DE COORDENAÇÃO", categoria: "A - ADMINISTRATIVO", turno: "MANUAL" }];
                     }
                     esconderCarregamento();
                     carregarListaServidores();
@@ -412,28 +426,54 @@
                 document.getElementById('servidor-nome').textContent = servidor.nome;
                 document.getElementById('servidor-cpf').textContent = servidor.cpf;
                 document.getElementById('servidor-cargo').textContent = servidor.cargo;
+                
+                // Atualiza o seletor de turno para mostrar o que está salvo
+                document.getElementById('seletor-turno').value = servidor.turno || "MANUAL";
             } else {
                 document.getElementById('servidor-nome').textContent = "SELECIONE NA LISTA ACIMA";
                 document.getElementById('servidor-cpf').textContent = "000.000.000-00";
                 document.getElementById('servidor-cargo').textContent = "...";
+                document.getElementById('seletor-turno').value = "MANUAL";
             }
             gerarFolha();
         }
 
+        // 👇 NOVA FUNÇÃO PARA ATUALIZAR O HORÁRIO DO SERVIDOR 👇
+        function atualizarTurno() {
+            const index = document.getElementById('seletor-servidor').value;
+            if (index === "") return;
+            const novoTurno = document.getElementById('seletor-turno').value;
+            
+            if (bancoServidores[index].turno !== novoTurno) {
+                bancoServidores[index].turno = novoTurno;
+                salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
+                gerarFolha(); // Recarrega a folha na mesma hora para exibir os horários
+            }
+        }
+
+        // 👇 NOVA FUNÇÃO PARA GERAR AS CÉLULAS COM AS HORAS 👇
+        function obterCelulasHoras(turno) {
+            if (turno === "MATUTINO") return `<td>08:00</td><td>12:00</td><td>---</td><td>---</td>`;
+            if (turno === "VESPERTINO") return `<td>---</td><td>---</td><td>13:00</td><td>17:00</td>`;
+            if (turno === "INTEGRAL") return `<td>08:00</td><td>12:00</td><td>13:00</td><td>17:00</td>`;
+            return `<td></td><td></td><td></td><td></td>`; // MANUAL (Em branco)
+        }
+
         function abrirModal() { document.getElementById('modalAdd').style.display = 'flex'; }
-        function fecharModal() { document.getElementById('modalAdd').style.display = 'none'; ['novo-nome','novo-cpf','novo-cargo'].forEach(id => document.getElementById(id).value = ''); document.getElementById('novo-categoria').value = ''; }
+        function fecharModal() { document.getElementById('modalAdd').style.display = 'none'; ['novo-nome','novo-cpf','novo-cargo'].forEach(id => document.getElementById(id).value = ''); document.getElementById('novo-categoria').value = ''; document.getElementById('novo-turno').value = 'MANUAL'; }
 
         function salvarNovoServidor() {
             let nome = document.getElementById('novo-nome').value.trim();
             let cpf = document.getElementById('novo-cpf').value.trim();
             let cargo = document.getElementById('novo-cargo').value.trim();
             let categoria = document.getElementById('novo-categoria').value;
+            let turno = document.getElementById('novo-turno').value;
 
             if (!nome || !cpf || !cargo || !categoria) { alert("Preencha todos os campos e selecione o Setor!"); return; }
             if (!cpfBasicoValido(cpf)) { alert("CPF inválido (deve conter 11 dígitos)."); return; }
             if (bancoServidores.some(s => s.cpf === cpf || s.nome === nome)) { alert("❌ Erro: Já existe um servidor com este Nome ou CPF!"); return; }
 
-            bancoServidores.push({ nome, cpf, cargo, categoria });
+            bancoServidores.push({ nome, cpf, cargo, categoria, turno });
             organizarEOrdenarServidores();
             salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
             carregarListaServidores();
@@ -481,7 +521,6 @@
             document.getElementById('servidor-cargo').addEventListener('blur', atualizarServidorEditado);
         }
 
-        // 👇 NOVAS FUNÇÕES BLINDADAS PARA SALVAR TEXTO LIVRE 👇
         window.salvarRotulo = function(elemento) {
             let chave = elemento.getAttribute('data-chave');
             let dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1,"motivo":"","rotulo":""}');
@@ -505,14 +544,12 @@
             const classe = tipo === 'geral' ? 'fim-de-semana' : 'linha-individual';
             let chaveSafe = escapeHtml(chave);
             
-            // Rótulo agora usa a variável chaveSafe com segurança absoluta através de data-chave
             return `<td colspan="5" class="${classe}">
                 <span class="rotulo-editavel" data-chave="${chaveSafe}" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarRotulo(this)">${escapeHtml(rotuloExibido)}</span> 
                 <span class="motivo-feriado" data-chave="${chaveSafe}" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo(this)">${escapeHtml(dados.motivo || '')}</span>
             </td>`;
         }
 
-        // 👇 FUNÇÃO DO SÁBADO LIBERADA 👇
         window.toggleSabado = function(ano, mes, dia) {
             let chave = `sabado_aberto_${ano}_${mes}_${dia}`;
             if (memoriaNuvem[chave]) { removerDaNuvem(chave); } else { salvarNaNuvem(chave, "1"); }
@@ -525,16 +562,18 @@
             linhaElemento.setAttribute('data-estado-geral', novoEstado);
             linhaElemento.setAttribute('data-estado-individual', '0');
 
+            let index = document.getElementById('seletor-servidor').value;
             let nomeAtual = document.getElementById('servidor-nome').textContent;
+            let turnoAtual = index !== "" ? (bancoServidores[index].turno || "MANUAL") : "MANUAL";
             let chave = `feriado_${ano}_${mes}_${diaNumero}`;
             removerDaNuvem(`ausencia_${nomeAtual}_${ano}_${mes}_${diaNumero}`);
 
             if (novoEstado === ESTADOS.NORMAL) {
-                linhaElemento.innerHTML = `${celulaDiaHtml}<td></td><td></td><td></td><td></td><td></td>`;
+                // Ao voltar para normal, repõe os horários automaticamente
+                linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + `<td></td>`;
                 removerDaNuvem(chave);
             } else {
                 let dadosAntigos = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : {};
-                // Se clicou de novo e mudou o tipo (ex: de Feriado pra Facultativo), reseta o texto livre para o padrão
                 let novoRotulo = (dadosAntigos.estado === novoEstado) ? (dadosAntigos.rotulo || "") : "";
                 let dados = { estado: novoEstado, motivo: dadosAntigos.motivo || "", rotulo: novoRotulo };
                 
@@ -545,7 +584,10 @@
 
         function alternarAusenciaIndividual(linhaElemento, ano, mes, diaNumero, evento, celulaDiaHtml) {
             evento.preventDefault();
+            let index = document.getElementById('seletor-servidor').value;
             let nomeAtual = document.getElementById('servidor-nome').textContent;
+            let turnoAtual = index !== "" ? (bancoServidores[index].turno || "MANUAL") : "MANUAL";
+
             if (nomeAtual === "SELECIONE NA LISTA ACIMA" || nomeAtual === "") { alert("⚠️ Selecione um servidor primeiro."); return; }
 
             let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-individual') || '0');
@@ -562,7 +604,8 @@
                     linhaElemento.innerHTML = celulaDiaHtml + obterConteudoLinha(dadosGeral, 'geral', chaveGeral);
                     linhaElemento.setAttribute('data-estado-geral', dadosGeral.estado);
                 } else {
-                    linhaElemento.innerHTML = `${celulaDiaHtml}<td></td><td></td><td></td><td></td><td></td>`;
+                    // Ao voltar para normal, repõe os horários automaticamente
+                    linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + `<td></td>`;
                     linhaElemento.setAttribute('data-estado-geral', '0');
                 }
                 removerDaNuvem(chave);
@@ -581,7 +624,10 @@
             const mes = parseInt(selectMes.value);
             const nomeMes = selectMes.options[selectMes.selectedIndex].text;
             const ano = parseInt(document.getElementById('ano').value);
+            
+            const index = document.getElementById('seletor-servidor').value;
             const nomeAtual = document.getElementById('servidor-nome').textContent;
+            const turnoAtual = index !== "" ? (bancoServidores[index].turno || "MANUAL") : "MANUAL";
 
             document.getElementById('titulo-periodo').textContent = `Folha de Ponto - Período: ${nomeMes} ${ano}`;
 
@@ -598,7 +644,6 @@
                 if (diaDaSemana === 0) {
                     tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">DOMINGO</td>`;
                 } else if (diaDaSemana === 6 && !isSabadoAberto) {
-                    // 👇 LINHA CORRIGIDA DO SÁBADO (Agora o clique está em toda a linha e não cria feriado!) 👇
                     tr.className = "dia-util";
                     tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana" style="color: #2B6CB0;">
                         <span class="esconder-impressao" style="text-decoration: underline; cursor: pointer;">SÁBADO (Clique para abrir)</span>
@@ -632,7 +677,9 @@
                     } else {
                         tr.setAttribute('data-estado-geral', '0');
                         tr.setAttribute('data-estado-individual', '0');
-                        tr.innerHTML = `${celulaDiaHtml}<td></td><td></td><td></td><td></td><td></td>`;
+                        
+                        // 👇 HORAS AUTOMÁTICAS INSERIDAS AQUI 👇
+                        tr.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + `<td></td>`;
                     }
 
                     tr.onclick = function() { alternarFeriadoGeral(this, ano, mes, dia, celulaDiaHtml); };
@@ -640,6 +687,29 @@
                 }
                 corpoTabela.appendChild(tr);
             }
+        }
+
+        // 👇 NOVA FUNÇÃO PARA GERAR O EXCEL 👇
+        function exportarExcel() {
+            if (bancoServidores.length === 0) { alert("A lista de servidores está vazia!"); return; }
+            
+            // O código \uFEFF é um truque para o Excel do Brasil reconhecer os acentos (ç, ã)
+            let csv = '\uFEFF'; 
+            csv += "NOME;CPF;CARGO;SETOR;TURNO\n"; // Cabeçalho das colunas
+
+            bancoServidores.forEach(s => {
+                let turnoFormatado = s.turno || "MANUAL";
+                csv += `${s.nome};${s.cpf};${s.cargo};${s.categoria};${turnoFormatado}\n`;
+            });
+
+            let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            let url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "RH_Servidores_CMEI.csv");
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
         }
 
         function imprimirTodosLote() {
