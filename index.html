@@ -10,60 +10,42 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 
     <style>
-        /* Estilos Gerais */
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .controles, .controles-avancados { background-color: #fff; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 10px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 900px; box-sizing: border-box; }
         .grupo-seletor { display: flex; gap: 5px; align-items: center; }
         select, button, input { padding: 8px 12px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         select { cursor: pointer; transition: border-color 0.2s; } select:hover { border-color: #3182CE; }
         button { background-color: #4A5568; color: white; border: none; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
-        
-        /* Cores dos Botões */
         .btn-imprimir { background-color: #3182CE; } .btn-imprimir:hover { background-color: #2B6CB0; }
         .btn-lote { background-color: #dd6b20; } .btn-lote:hover { background-color: #c05621; }
         .btn-add { background-color: #38a169; padding: 8px 10px; } .btn-add:hover { background-color: #2f855a; }
         .btn-del { background-color: #e53e3e; padding: 8px 10px; } .btn-del:hover { background-color: #c53030; }
         .btn-backup { background-color: #4a5568; } .btn-backup:hover { background-color: #2d3748; }
         .btn-sair { background-color: #e53e3e; padding: 8px 15px; margin-left: 15px; } .btn-sair:hover { background-color: #c53030; }
-
-        /* Estilos da Folha */
         .folha-container { background-color: #fff; padding: 20px 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 900px; box-sizing: border-box; }
         .cabecalho-container { display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 15px; min-height: 80px; }
-        
-        .cabecalho-logo { position: absolute; left: 0; top: 0; cursor: pointer; min-width: 80px; min-height: 80px; } 
+        .cabecalho-logo { position: absolute; left: 0; top: 0; cursor: pointer; min-width: 80px; min-height: 80px; }
         .cabecalho-logo img { max-width: 80px; max-height: 80px; object-fit: contain; pointer-events: none; }
-        
         .cabecalho-textos { text-align: center; width: 100%; padding: 0 90px; box-sizing: border-box; }
         .cabecalho-textos h3 { margin: 0; font-size: 14px; font-weight: bold; } .cabecalho-textos p { margin: 2px 0; font-size: 12px; } .cabecalho-textos h2 { margin: 15px 0 0 0; font-size: 16px; }
         .aviso-clique { text-align: center; font-size: 12px; color: #e53e3e; margin-bottom: 10px; font-weight: bold; }
-
-        /* Tabela */
         .tabela-info, .tabela-ponto { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 12px; }
         .tabela-info td, .tabela-ponto th, .tabela-ponto td { border: 1px solid #000; padding: 4px 6px; }
         .tabela-info td { font-weight: bold; } .tabela-ponto th { background-color: #f0f0f0; text-align: center; } .tabela-ponto td { text-align: center; height: 16px; }
         .fim-de-semana { background-color: #e2e8f0; font-weight: bold; letter-spacing: 2px; }
         .linha-individual { background-color: #fefcbf; font-weight: bold; letter-spacing: 1px; color: #744210; }
         .dia-util { cursor: pointer; transition: background-color 0.2s; } .dia-util:hover { background-color: #edf2f7; }
-
-        /* Campos Editáveis */
         .editavel { background-color: #fffae6; border-bottom: 1px dashed #ccc; cursor: text; padding: 1px 3px; border-radius: 2px; display: inline-block; min-width: 50px; }
         .editavel:focus { background-color: #fff; outline: 2px solid #3182CE; border-bottom: none; }
         .motivo-feriado { background-color: transparent; border-bottom: 1px dashed #999; cursor: text; padding: 0 5px; outline: none; font-family: inherit; text-transform: uppercase; }
         .motivo-feriado:empty:before { content: " - CLIQUE PARA DESCREVER"; color: #718096; font-style: italic; font-weight: normal; text-transform: none; }
-
-        /* Rodapé Ajustado */
         .assinaturas-rodape { margin-top: 35px; display: flex; justify-content: center; text-align: center; padding: 0 20px; } .bloco-assinatura { width: 50%; }
         .linha-assinatura { border-top: 1px solid #000; padding-top: 5px; font-size: 12px; font-weight: bold; } .linha-assinatura span { display: block; margin-bottom: 3px; } .cargo-assinatura { font-weight: normal; font-size: 11px; }
-
-        /* Janela Modal e Loader */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; padding: 25px; border-radius: 8px; width: 340px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
-        .modal-content h3 { margin: 0 0 10px 0; color: #2d3748; text-align: center; } 
+        .modal-content h3 { margin: 0 0 10px 0; color: #2d3748; text-align: center; }
         .modal-botoes { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; } .modal-botoes button { flex: 1; padding: 10px; } .btn-cancelar { background-color: #e53e3e; } .btn-cancelar:hover { background-color: #c53030; }
-        
         #tela-carregamento { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f4f9; justify-content: center; align-items: center; z-index: 9999; font-size: 20px; font-weight: bold; color: #3182CE; }
-
-        /* Tela de Login */
         #tela-login { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2d3748; display: flex; justify-content: center; align-items: center; z-index: 10000; }
         .login-box { background: white; padding: 40px 30px; border-radius: 10px; box-shadow: 0 15px 25px rgba(0,0,0,0.3); width: 100%; max-width: 350px; text-align: center; }
         .login-box h2 { margin: 0 0 5px 0; color: #1a202c; font-size: 22px; }
@@ -72,15 +54,9 @@
         .login-box button { width: 100%; padding: 12px; background-color: #3182CE; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
         .login-box button:hover { background-color: #2B6CB0; }
         #mensagem-erro { color: #e53e3e; font-size: 13px; margin-top: 10px; font-weight: bold; display: none; }
-
-        /* Área do Lote de Impressão */
         #print-wrapper { display: none; width: 100%; } .quebra-pagina { page-break-after: always; margin-bottom: 20px; }
-
-        /* Optgroup styling no seletor */
         optgroup { font-weight: bold; color: #2B6CB0; background: #f7fafc; }
         option { color: #333; background: #fff; font-weight: normal; }
-
-        /* Regras Rigorosas de Impressão */
         @media print {
             body { background-color: #fff; padding: 0; margin: 0; } @page { margin: 1cm; }
             .controles, .controles-avancados, .aviso-clique, .modal-overlay, #tela-carregamento, #tela-login { display: none !important; }
@@ -112,7 +88,6 @@
             <button class="btn-add" onclick="abrirModal()" title="Cadastrar Novo Servidor">➕</button>
             <button class="btn-del" onclick="removerServidor()" title="Remover Servidor Selecionado">🗑️</button>
         </div>
-
         <label for="mes">Mês:</label>
         <select id="mes" onchange="gerarFolha()">
             <option value="1">JANEIRO</option> <option value="2">FEVEREIRO</option> <option value="3" selected>MARÇO</option>
@@ -120,20 +95,17 @@
             <option value="7">JULHO</option> <option value="8">AGOSTO</option> <option value="9">SETEMBRO</option>
             <option value="10">OUTUBRO</option> <option value="11">NOVEMBRO</option> <option value="12">DEZEMBRO</option>
         </select>
-
         <label for="ano">Ano:</label>
         <select id="ano" onchange="gerarFolha()">
             <option value="2025">2025</option> <option value="2026" selected>2026</option>
             <option value="2027">2027</option> <option value="2028">2028</option>
         </select>
-
         <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Atual</button>
         <button class="btn-sair" onclick="fazerLogout()" title="Sair com Segurança">Sair 🔒</button>
     </div>
 
     <div class="controles-avancados">
         <button class="btn-lote" onclick="imprimirTodosLote()">🖨️ Imprimir Todos da Lista</button>
-        
         <div id="painel-secreto" style="display: none; gap: 15px;">
             <button class="btn-backup" onclick="exportarBackup()">💾 Exportar Backup em Nuvem</button>
             <button class="btn-backup" onclick="document.getElementById('file-import').click()">📂 Restaurar Backup</button>
@@ -147,7 +119,6 @@
             <input type="text" id="novo-nome" placeholder="Nome Completo" oninput="this.value = this.value.toUpperCase()">
             <input type="text" id="novo-cpf" placeholder="CPF (Apenas números ou com traços)">
             <input type="text" id="novo-cargo" placeholder="Cargo (Ex: Auxiliar)" oninput="this.value = this.value.toUpperCase()">
-            
             <select id="novo-categoria" style="width: 100%;">
                 <option value="">-- Selecione o Setor --</option>
                 <option value="A - DIREÇÃO E COORDENAÇÃO">Direção e Coordenação</option>
@@ -159,7 +130,6 @@
                 <option value="G - PORTARIA E SEGURANÇA">Portaria e Segurança</option>
                 <option value="H - OUTROS">Outros</option>
             </select>
-
             <div class="modal-botoes">
                 <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
                 <button class="btn-add" onclick="salvarNovoServidor()">Salvar na Nuvem</button>
@@ -177,7 +147,7 @@
             <div class="cabecalho-textos">
                 <h3>CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL MARIA JANDIRA DE SOUZA FONSECA</h3>
                 <p>Rua Maria Madalena – Centro – Cep: 48.415-000 | Fátima - Bahia</p>
-                <p>E-mail: [mariajandira2015@hotmail.com](mailto:mariajandira2015@hotmail.com) | CNPJ: 24.755.198/0001-81</p>
+                <p>E-mail: mariajandira2015@hotmail.com | CNPJ: 24.755.198/0001-81</p>
                 <h2 id="titulo-periodo">Folha de Ponto - Período: MARÇO 2026</h2>
             </div>
         </div>
@@ -200,7 +170,7 @@
                     <th rowspan="2">DIA</th> <th colspan="2">MATUTINO</th> <th colspan="2">VESPERTINO</th> <th rowspan="2" style="width: 50%;">ASSINATURA DO(A) SERVIDOR(A)</th>
                 </tr>
                 <tr>
-                   <th style="width: 12%;">ENTRADA</th> <th style="width: 12%;">SAÍDA</th> <th style="width: 12%;">ENTRADA</th> <th style="width: 12%;">SAÍDA</th>
+                    <th style="width: 12%;">ENTRADA</th> <th style="width: 12%;">SAÍDA</th> <th style="width: 12%;">ENTRADA</th> <th style="width: 12%;">SAÍDA</th>
                 </tr>
             </thead>
             <tbody id="corpo-tabela"></tbody>
@@ -217,9 +187,6 @@
     </div>
 
     <script>
-        // ========================================================
-        // CONSTANTES E CONFIGURAÇÕES
-        // ========================================================
         const ROTULOS = {
             faltaJustificada: "FALTA JUSTIFICADA",
             atestadoMedico: "ATESTADO MÉDICO",
@@ -227,12 +194,7 @@
             pontoFacultativo: "PONTO FACULTATIVO"
         };
 
-        const ESTADOS = {
-            NORMAL: 0,
-            JUSTIFICADA: 1,
-            MEDICO: 2,
-            FACULTATIVO: 2
-        };
+        const ESTADOS = { NORMAL: 0, JUSTIFICADA: 1, MEDICO: 2 };
 
         const firebaseConfig = {
             apiKey: "AIzaSyCswoXWBPacdMKfHKUBili4SwHUj7566L8",
@@ -252,12 +214,8 @@
         let memoriaNuvem = {};
         let bancoServidores = [];
 
-        // ========================================================
-        // UTILITÁRIOS
-        // ========================================================
         function cpfBasicoValido(cpf) {
-            const cpfLimpo = cpf.replace(/[^\d]/g, '');
-            return cpfLimpo.length === 11;
+            return cpf.replace(/[^\d]/g, '').length === 11;
         }
 
         function mostrarCarregamento(mensagem = "☁️ Conectando ao Banco de Dados CMEI...") {
@@ -270,11 +228,10 @@
             document.getElementById('tela-carregamento').style.display = 'none';
         }
 
-        // ========================================================
-        // 1. AUTENTICAÇÃO
-        // ========================================================
+        // ✅ CORREÇÃO 1: tela-login agora é escondida corretamente após login
         auth.onAuthStateChanged((user) => {
             if (user) {
+                document.getElementById('tela-login').style.display = 'none';
                 mostrarCarregamento();
                 carregarDadosDaNuvem();
             } else {
@@ -288,7 +245,7 @@
             const email = document.getElementById('login-email').value.trim();
             const senha = document.getElementById('login-senha').value;
             const msgErro = document.getElementById('mensagem-erro');
-            
+
             if (!email || !senha) {
                 msgErro.textContent = "Preencha o e-mail e a senha.";
                 msgErro.style.display = 'block';
@@ -296,16 +253,11 @@
             }
 
             auth.signInWithEmailAndPassword(email, senha)
-                .then(() => {
-                    msgErro.style.display = 'none';
-                })
+                .then(() => { msgErro.style.display = 'none'; })
                 .catch((error) => {
                     let mensagem = "E-mail ou senha incorretos!";
-                    if (error.code === 'auth/too-many-requests') {
-                        mensagem = "Muitas tentativas. Tente novamente mais tarde.";
-                    } else if (error.code === 'auth/user-not-found') {
-                        mensagem = "Usuário não encontrado.";
-                    }
+                    if (error.code === 'auth/too-many-requests') mensagem = "Muitas tentativas. Tente novamente mais tarde.";
+                    else if (error.code === 'auth/user-not-found') mensagem = "Usuário não encontrado.";
                     msgErro.textContent = mensagem;
                     msgErro.style.display = 'block';
                 });
@@ -319,37 +271,22 @@
             });
         }
 
-        // ========================================================
-        // 2. GERENCIAMENTO DE DADOS FIREBASE
-        // ========================================================
         function carregarDadosDaNuvem() {
             database.ref('cmei_dados').once('value')
                 .then((snapshot) => {
                     memoriaNuvem = snapshot.val() || {};
-                    
                     if (memoriaNuvem['listaServidores']) {
                         bancoServidores = JSON.parse(memoriaNuvem['listaServidores']);
-                        bancoServidores.forEach(s => {
-                            if (!s.categoria) s.categoria = "H - OUTROS";
-                        });
+                        bancoServidores.forEach(s => { if (!s.categoria) s.categoria = "H - OUTROS"; });
                     } else {
-                        bancoServidores = [{
-                            nome: "FERNANDA DE JESUS ALMEIDA",
-                            cpf: "049.131.865-07",
-                            cargo: "AUXILIAR DE COORDENAÇÃO",
-                            categoria: "A - DIREÇÃO E COORDENAÇÃO"
-                        }];
+                        bancoServidores = [{ nome: "FERNANDA DE JESUS ALMEIDA", cpf: "049.131.865-07", cargo: "AUXILIAR DE COORDENAÇÃO", categoria: "A - DIREÇÃO E COORDENAÇÃO" }];
                     }
-
                     esconderCarregamento();
                     carregarListaServidores();
                     carregarDadosEditaveis();
                     gerarFolha();
                 })
-                .catch(() => {
-                    alert("Erro ao conectar no banco de dados.");
-                    esconderCarregamento();
-                });
+                .catch(() => { alert("Erro ao conectar no banco de dados."); esconderCarregamento(); });
         }
 
         function salvarNaNuvem(chave, valor) {
@@ -365,14 +302,9 @@
         function revelarBackup() {
             const painel = document.getElementById('painel-secreto');
             painel.style.display = painel.style.display === 'none' ? 'flex' : 'none';
-            if (painel.style.display === 'flex') {
-                alert("🔓 Modo Administrador ativado!");
-            }
+            if (painel.style.display === 'flex') alert("🔓 Modo Administrador ativado!");
         }
 
-        // ========================================================
-        // 3. GERENCIAMENTO DE SERVIDORES (MELHORADO)
-        // ========================================================
         function organizarEOrdenarServidores() {
             bancoServidores.sort((a, b) => {
                 let catA = a.categoria || "H - OUTROS";
@@ -386,7 +318,6 @@
         function carregarListaServidores() {
             const seletor = document.getElementById('seletor-servidor');
             seletor.innerHTML = '<option value="">-- Selecione ou Digite Abaixo --</option>';
-            
             organizarEOrdenarServidores();
 
             let categoriaAtual = "";
@@ -394,24 +325,17 @@
 
             bancoServidores.forEach((servidor, index) => {
                 let cat = servidor.categoria || "H - OUTROS";
-                let nomeCategoriaLimpo = cat.substring(4);
-
                 if (cat !== categoriaAtual) {
                     categoriaAtual = cat;
                     optGroupAtual = document.createElement('optgroup');
-                    optGroupAtual.label = "📌 " + nomeCategoriaLimpo;
+                    optGroupAtual.label = "📌 " + cat.substring(4);
                     seletor.appendChild(optGroupAtual);
                 }
-
                 let opcao = document.createElement('option');
                 opcao.value = index;
                 opcao.text = servidor.nome;
-                
-                if (optGroupAtual) {
-                    optGroupAtual.appendChild(opcao);
-                } else {
-                    seletor.appendChild(opcao);
-                }
+                if (optGroupAtual) optGroupAtual.appendChild(opcao);
+                else seletor.appendChild(opcao);
             });
         }
 
@@ -431,15 +355,11 @@
             gerarFolha();
         }
 
-        function abrirModal() {
-            document.getElementById('modalAdd').style.display = 'flex';
-        }
+        function abrirModal() { document.getElementById('modalAdd').style.display = 'flex'; }
 
         function fecharModal() {
             document.getElementById('modalAdd').style.display = 'none';
-            document.getElementById('novo-nome').value = '';
-            document.getElementById('novo-cpf').value = '';
-            document.getElementById('novo-cargo').value = '';
+            ['novo-nome','novo-cpf','novo-cargo'].forEach(id => document.getElementById(id).value = '');
             document.getElementById('novo-categoria').value = '';
         }
 
@@ -449,25 +369,13 @@
             let cargo = document.getElementById('novo-cargo').value.trim();
             let categoria = document.getElementById('novo-categoria').value;
 
-            if (!nome || !cpf || !cargo || !categoria) {
-                alert("Preencha todos os campos e selecione o Setor!");
-                return;
-            }
-
-            if (!cpfBasicoValido(cpf)) {
-                alert("CPF inválido (deve conter 11 dígitos).");
-                return;
-            }
-
-            if (bancoServidores.some(s => s.cpf === cpf || s.nome === nome)) {
-                alert("❌ Erro: Já existe um servidor com este Nome ou CPF!");
-                return;
-            }
+            if (!nome || !cpf || !cargo || !categoria) { alert("Preencha todos os campos e selecione o Setor!"); return; }
+            if (!cpfBasicoValido(cpf)) { alert("CPF inválido (deve conter 11 dígitos)."); return; }
+            if (bancoServidores.some(s => s.cpf === cpf || s.nome === nome)) { alert("❌ Erro: Já existe um servidor com este Nome ou CPF!"); return; }
 
             bancoServidores.push({ nome, cpf, cargo, categoria });
             organizarEOrdenarServidores();
             salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
-            
             carregarListaServidores();
             fecharModal();
 
@@ -478,12 +386,8 @@
 
         function removerServidor() {
             const index = document.getElementById('seletor-servidor').value;
-            if (index === "") {
-                alert("⚠️ Selecione um servidor na lista para remover.");
-                return;
-            }
-            const servidor = bancoServidores[index];
-            if (confirm(`Remover ${servidor.nome} permanentemente?`)) {
+            if (index === "") { alert("⚠️ Selecione um servidor na lista para remover."); return; }
+            if (confirm(`Remover ${bancoServidores[index].nome} permanentemente?`)) {
                 bancoServidores.splice(index, 1);
                 salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
                 carregarListaServidores();
@@ -491,53 +395,41 @@
             }
         }
 
-        // ========================================================
-        // 4. CAMPOS EDITÁVEIS (MELHORADO)
-        // ========================================================
         function salvarDadosEditaveis() {
-            const campos = document.querySelectorAll('.editavel');
-            campos.forEach(campo => {
-                if (campo.id) {
-                    salvarNaNuvem(campo.id, campo.textContent);
-                }
+            document.querySelectorAll('.editavel').forEach(campo => {
+                if (campo.id) salvarNaNuvem(campo.id, campo.textContent);
             });
         }
 
         function carregarDadosEditaveis() {
-            const campos = document.querySelectorAll('.editavel');
-            campos.forEach(campo => {
-                if (campo.id && memoriaNuvem[campo.id]) {
-                    campo.textContent = memoriaNuvem[campo.id];
-                }
+            document.querySelectorAll('.editavel').forEach(campo => {
+                if (campo.id && memoriaNuvem[campo.id]) campo.textContent = memoriaNuvem[campo.id];
                 campo.addEventListener('input', salvarDadosEditaveis);
             });
         }
 
         function salvarMotivo(chave, elemento) {
-            let dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1, "motivo":""}');
+            let dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1,"motivo":""}');
             dados.motivo = elemento.textContent;
             salvarNaNuvem(chave, JSON.stringify(dados));
         }
 
-        // ========================================================
-        // 5. LÓGICA DE FERIADOS E FALTAS (REFATORADA)
-        // ========================================================
-        function obterConteudoLinha(estado, tipo, motivo = "", diaNumero) {
-            const rotulo = tipo === 'geral' ? 
-                (estado === ESTADOS.JUSTIFICADA ? ROTULOS.feriado : ROTULOS.pontoFacultativo) :
-                (estado === ESTADOS.JUSTIFICADA ? ROTULOS.faltaJustificada : ROTULOS.atestadoMedico);
-            
+        // ✅ CORREÇÃO 2: chave completa passada como parâmetro para salvarMotivo
+        function obterConteudoLinha(estado, tipo, motivo, diaNumero, chave) {
+            const rotulo = tipo === 'geral'
+                ? (estado === ESTADOS.JUSTIFICADA ? ROTULOS.feriado : ROTULOS.pontoFacultativo)
+                : (estado === ESTADOS.JUSTIFICADA ? ROTULOS.faltaJustificada : ROTULOS.atestadoMedico);
             const classe = tipo === 'geral' ? 'fim-de-semana' : 'linha-individual';
-            
-            return `<td>${diaNumero}</td><td colspan="5" class="${classe}">${rotulo} <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${tipo}_${diaNumero}', this)">${motivo}</span></td>`;
+            return `<td>${diaNumero}</td><td colspan="5" class="${classe}">${rotulo} <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)">${motivo}</span></td>`;
         }
 
+        // ✅ CORREÇÃO 3: dados.estado é atualizado corretamente antes de salvar
         function alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero) {
             let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-geral') || '0');
             let novoEstado = (estadoAtual + 1) % 3;
             linhaElemento.setAttribute('data-estado-geral', novoEstado);
             linhaElemento.setAttribute('data-estado-individual', '0');
-            
+
             let chave = `feriado_${ano}_${mes}_${diaNumero}`;
             let cpf = document.getElementById('servidor-cpf').textContent;
             removerDaNuvem(`ausencia_${cpf}_${ano}_${mes}_${diaNumero}`);
@@ -546,8 +438,9 @@
                 linhaElemento.innerHTML = `<td>${diaNumero}</td><td></td><td></td><td></td><td></td><td></td>`;
                 removerDaNuvem(chave);
             } else {
-                let dados = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : { estado: novoEstado, motivo: "" };
-                linhaElemento.innerHTML = obterConteudoLinha(novoEstado, 'geral', dados.motivo, diaNumero);
+                let dados = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : { motivo: "" };
+                dados.estado = novoEstado;
+                linhaElemento.innerHTML = obterConteudoLinha(novoEstado, 'geral', dados.motivo, diaNumero, chave);
                 salvarNaNuvem(chave, JSON.stringify(dados));
             }
         }
@@ -555,23 +448,20 @@
         function alternarAusenciaIndividual(linhaElemento, ano, mes, diaNumero, evento) {
             evento.preventDefault();
             let cpf = document.getElementById('servidor-cpf').textContent;
-            if (cpf === "000.000.000-00" || cpf === "") {
-                alert("⚠️ Selecione um servidor primeiro.");
-                return;
-            }
+            if (cpf === "000.000.000-00" || cpf === "") { alert("⚠️ Selecione um servidor primeiro."); return; }
 
             let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-individual') || '0');
             let novoEstado = (estadoAtual + 1) % 3;
             linhaElemento.setAttribute('data-estado-individual', novoEstado);
-            
+
             let chave = `ausencia_${cpf}_${ano}_${mes}_${diaNumero}`;
 
             if (novoEstado === ESTADOS.NORMAL) {
-                // Volta ao estado normal ou aplica feriado geral se existir
                 let temFeriadoGeral = memoriaNuvem[`feriado_${ano}_${mes}_${diaNumero}`];
                 if (temFeriadoGeral) {
                     let dadosGeral = JSON.parse(temFeriadoGeral);
-                    linhaElemento.innerHTML = obterConteudoLinha(dadosGeral.estado, 'geral', dadosGeral.motivo, diaNumero);
+                    let chaveGeral = `feriado_${ano}_${mes}_${diaNumero}`;
+                    linhaElemento.innerHTML = obterConteudoLinha(dadosGeral.estado, 'geral', dadosGeral.motivo, diaNumero, chaveGeral);
                     linhaElemento.setAttribute('data-estado-geral', dadosGeral.estado);
                 } else {
                     linhaElemento.innerHTML = `<td>${diaNumero}</td><td></td><td></td><td></td><td></td><td></td>`;
@@ -579,8 +469,9 @@
                 }
                 removerDaNuvem(chave);
             } else {
-                let dados = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : { estado: novoEstado, motivo: "" };
-                linhaElemento.innerHTML = obterConteudoLinha(novoEstado, 'individual', dados.motivo, diaNumero);
+                let dados = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : { motivo: "" };
+                dados.estado = novoEstado;
+                linhaElemento.innerHTML = obterConteudoLinha(novoEstado, 'individual', dados.motivo, diaNumero, chave);
                 salvarNaNuvem(chave, JSON.stringify(dados));
             }
         }
@@ -591,16 +482,15 @@
             const nomeMes = selectMes.options[selectMes.selectedIndex].text;
             const ano = parseInt(document.getElementById('ano').value);
             const cpfAtual = document.getElementById('servidor-cpf').textContent;
-            
+
             document.getElementById('titulo-periodo').textContent = `Folha de Ponto - Período: ${nomeMes} ${ano}`;
-            
+
             const corpoTabela = document.getElementById('corpo-tabela');
             corpoTabela.innerHTML = '';
             const diasNoMes = new Date(ano, mes, 0).getDate();
 
             for (let dia = 1; dia <= diasNoMes; dia++) {
-                const data = new Date(ano, mes - 1, dia);
-                const diaDaSemana = data.getDay();
+                const diaDaSemana = new Date(ano, mes - 1, dia).getDay();
                 const tr = document.createElement('tr');
 
                 if (diaDaSemana === 0) {
@@ -611,26 +501,26 @@
                     tr.className = "dia-util";
                     tr.setAttribute('tabindex', '0');
                     tr.setAttribute('role', 'button');
-                    
+
                     let chaveGeral = `feriado_${ano}_${mes}_${dia}`;
-                    let dadosGeral = memoriaNuvem[chaveGeral];
                     let chaveIndiv = `ausencia_${cpfAtual}_${ano}_${mes}_${dia}`;
+                    let dadosGeral = memoriaNuvem[chaveGeral];
                     let dadosIndiv = memoriaNuvem[chaveIndiv];
 
                     if (dadosIndiv) {
                         let info = JSON.parse(dadosIndiv);
                         tr.setAttribute('data-estado-individual', info.estado);
-                        tr.innerHTML = obterConteudoLinha(info.estado, 'individual', info.motivo, dia);
+                        tr.innerHTML = obterConteudoLinha(info.estado, 'individual', info.motivo, dia, chaveIndiv);
                     } else if (dadosGeral) {
                         let info = JSON.parse(dadosGeral);
                         tr.setAttribute('data-estado-geral', info.estado);
-                        tr.innerHTML = obterConteudoLinha(info.estado, 'geral', info.motivo, dia);
+                        tr.innerHTML = obterConteudoLinha(info.estado, 'geral', info.motivo, dia, chaveGeral);
                     } else {
                         tr.setAttribute('data-estado-geral', '0');
                         tr.setAttribute('data-estado-individual', '0');
                         tr.innerHTML = `<td>${dia}</td><td></td><td></td><td></td><td></td><td></td>`;
                     }
-                    
+
                     tr.onclick = function() { alternarFeriadoGeral(this, ano, mes, dia); };
                     tr.oncontextmenu = function(evento) { alternarAusenciaIndividual(this, ano, mes, dia, evento); };
                 }
@@ -638,14 +528,8 @@
             }
         }
 
-        // ========================================================
-        // 6. IMPRESSÃO E BACKUP
-        // ========================================================
         function imprimirTodosLote() {
-            if (bancoServidores.length === 0) {
-                alert("A lista de servidores está vazia!");
-                return;
-            }
+            if (bancoServidores.length === 0) { alert("A lista de servidores está vazia!"); return; }
 
             mostrarCarregamento("🖨️ Preparando impressões em lote...");
             let indiceOriginal = document.getElementById('seletor-servidor').value;
@@ -653,29 +537,22 @@
             printWrapper.innerHTML = '';
             document.body.classList.add('modo-lote');
 
-            const clones = [];
             for (let i = 0; i < bancoServidores.length; i++) {
                 document.getElementById('seletor-servidor').value = i;
                 preencherServidor();
-                
                 let cloneArea = document.getElementById('folha-impressao').cloneNode(true);
                 cloneArea.removeAttribute('id');
-                // Remove IDs duplicados para evitar conflitos
                 cloneArea.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
                 cloneArea.classList.add('quebra-pagina');
                 printWrapper.appendChild(cloneArea);
-                clones.push(cloneArea);
             }
 
-            setTimeout(() => {
-                window.print();
-                esconderCarregamento();
-            }, 500);
+            setTimeout(() => { window.print(); esconderCarregamento(); }, 500);
 
             window.onafterprint = function() {
                 document.body.classList.remove('modo-lote');
                 printWrapper.innerHTML = '';
-                document.getElementById('seletor-servidor').value = indiceOriginal !== "" ? indiceOriginal : "";
+                document.getElementById('seletor-servidor').value = indiceOriginal || "";
                 preencherServidor();
                 gerarFolha();
                 window.onafterprint = null;
@@ -683,9 +560,8 @@
         }
 
         function exportarBackup() {
-            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(memoriaNuvem));
             let link = document.createElement("a");
-            link.setAttribute("href", dataStr);
+            link.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(memoriaNuvem)));
             link.setAttribute("download", "backup_escola_pontos.json");
             document.body.appendChild(link);
             link.click();
@@ -695,18 +571,12 @@
         function importarBackup(evento) {
             let ficheiro = evento.target.files[0];
             if (!ficheiro) return;
-            
             let leitor = new FileReader();
             leitor.onload = function(e) {
                 try {
                     let dados = JSON.parse(e.target.result);
-                    database.ref('cmei_dados').set(dados).then(() => {
-                        alert("✅ Backup restaurado!");
-                        location.reload();
-                    });
-                } catch(err) {
-                    alert("❌ Arquivo inválido!");
-                }
+                    database.ref('cmei_dados').set(dados).then(() => { alert("✅ Backup restaurado!"); location.reload(); });
+                } catch(err) { alert("❌ Arquivo inválido!"); }
             };
             leitor.readAsText(ficheiro);
             evento.target.value = "";
