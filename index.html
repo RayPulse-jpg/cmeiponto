@@ -44,7 +44,10 @@
         
         .editavel { background-color: #fffae6; border-bottom: 1px dashed #ccc; cursor: text; padding: 1px 3px; border-radius: 2px; display: inline-block; min-width: 50px; }
         .editavel:focus { background-color: #fff; outline: 2px solid #3182CE; border-bottom: none; }
-        .motivo-feriado { background-color: transparent; border-bottom: 1px dashed #999; cursor: text; padding: 0 5px; outline: none; font-family: inherit; text-transform: uppercase; }
+        
+        /* Novos Estilos para Edição de Rótulos */
+        .rotulo-editavel { cursor: text; border-bottom: 1px dashed #999; display: inline-block; min-width: 60px; padding: 0 4px; }
+        .motivo-feriado { background-color: transparent; border-bottom: 1px dashed #999; cursor: text; padding: 0 5px; outline: none; font-family: inherit; text-transform: uppercase; display: inline-block; min-width: 30px; }
         .motivo-feriado:empty:before { content: " - CLIQUE PARA DESCREVER"; color: #718096; font-style: italic; font-weight: normal; text-transform: none; }
         
         .assinaturas-rodape { margin-top: 35px; display: flex; justify-content: center; text-align: center; padding: 0 20px; } .bloco-assinatura { width: 50%; }
@@ -69,14 +72,18 @@
         optgroup { font-weight: bold; color: #2B6CB0; background: #f7fafc; }
         option { color: #333; background: #fff; font-weight: normal; }
         
-        /* Regras de Visualização para Tela x Impressão */
         .mostrar-impressao { display: none; }
         
         @media print {
             body { background-color: #fff; padding: 0; margin: 0; } 
             @page { margin: 0.4cm; } 
             .controles, .controles-avancados, .aviso-clique, .modal-overlay, #tela-carregamento, #tela-login { display: none !important; }
-            .editavel { background-color: transparent; border: none; padding: 0; } .dia-util { cursor: default; } .motivo-feriado { border: none; } .motivo-feriado:empty:before { content: ""; }
+            .editavel { background-color: transparent; border: none; padding: 0; } .dia-util { cursor: default; } 
+            
+            /* Tira os pontilhados na impressão para ficar profissional */
+            .rotulo-editavel, .motivo-feriado { border: none !important; } 
+            .motivo-feriado:empty:before { content: ""; }
+            
             body.modo-lote #folha-impressao { display: none !important; } body.modo-lote #print-wrapper { display: block !important; }
             body:not(.modo-lote) #folha-impressao { display: block !important; box-shadow: none; padding: 0; border: none; } body:not(.modo-lote) #print-wrapper { display: none !important; }
             
@@ -94,7 +101,6 @@
             
             .quebra-pagina { page-break-after: always; page-break-inside: avoid; margin-bottom: 0; }
             
-            /* Lógica de ocultar botões e textos temporários no papel */
             .esconder-impressao { display: none !important; }
             .mostrar-impressao { display: inline !important; color: #000 !important; font-weight: bold; }
         }
@@ -184,7 +190,7 @@
                 <img src="logo.png" alt="Logo da Unidade" onerror="this.style.display='none'">
             </div>
             <div class="cabecalho-textos">
-                <h3>CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL MARIA JANDIRA DE SOUZA FONSECA</h3>
+                <h3>CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL MARIA JANDIRA DE SOUSA FONSECA</h3>
                 <p>Rua Maria Madalena – Centro – Cep: 48.415-000 | Fátima - Bahia</p>
                 <p>E-mail: mariajandira2015@hotmail.com | CNPJ: 24.755.198/0001-81</p>
                 <h2 id="titulo-periodo">Folha de Ponto - Período: MARÇO 2026</h2>
@@ -257,6 +263,16 @@
         let memoriaNuvem = {};
         let bancoServidores = [];
 
+        // FUNÇÃO DE ESCUDO CONTRA ASPAS NOS NOMES (Ex: D'arc)
+        function escapeHtml(unsafe) {
+            return (unsafe || "").toString()
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
         function mascaraCPF(campo) {
             let cpf = campo.value || campo.textContent; 
             cpf = cpf.replace(/\D/g, ""); 
@@ -268,9 +284,7 @@
             else if(campo.textContent !== undefined) campo.textContent = cpf;
         }
 
-        function cpfBasicoValido(cpf) {
-            return cpf.replace(/[^\d]/g, '').length === 11;
-        }
+        function cpfBasicoValido(cpf) { return cpf.replace(/[^\d]/g, '').length === 11; }
 
         function mostrarCarregamento(mensagem = "☁️ Conectando ao Banco de Dados CMEI...") {
             const tela = document.getElementById('tela-carregamento');
@@ -278,9 +292,7 @@
             tela.style.display = 'flex';
         }
 
-        function esconderCarregamento() {
-            document.getElementById('tela-carregamento').style.display = 'none';
-        }
+        function esconderCarregamento() { document.getElementById('tela-carregamento').style.display = 'none'; }
 
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -299,27 +311,22 @@
             const senha = document.getElementById('login-senha').value;
             const msgErro = document.getElementById('mensagem-erro');
 
-            if (!email || !senha) {
-                msgErro.textContent = "Preencha o e-mail e a senha.";
-                msgErro.style.display = 'block';
-                return;
-            }
+            if (!email || !senha) { msgErro.textContent = "Preencha o e-mail e a senha."; msgErro.style.display = 'block'; return; }
 
             auth.signInWithEmailAndPassword(email, senha)
                 .then(() => { msgErro.style.display = 'none'; })
                 .catch((error) => {
                     let mensagem = "E-mail ou senha incorretos!";
+                    if (error.code === 'auth/network-request-failed' || error.code === 'auth/api-key-not-valid') mensagem = "Bloqueado por Segurança. Teste através do link do GitHub!";
+                    else if (error.code === 'auth/too-many-requests') mensagem = "Muitas tentativas. Tente novamente mais tarde.";
+                    else if (error.code === 'auth/user-not-found') mensagem = "Usuário não encontrado.";
                     msgErro.textContent = mensagem;
                     msgErro.style.display = 'block';
                 });
         }
 
         function fazerLogout() {
-            auth.signOut().then(() => {
-                memoriaNuvem = {};
-                bancoServidores = [];
-                document.getElementById('login-senha').value = '';
-            });
+            auth.signOut().then(() => { memoriaNuvem = {}; bancoServidores = []; document.getElementById('login-senha').value = ''; });
         }
 
         function carregarDadosDaNuvem() {
@@ -474,14 +481,16 @@
             document.getElementById('servidor-cargo').addEventListener('blur', atualizarServidorEditado);
         }
 
-        // 👇 NOVAS FUNÇÕES PARA EDITAR O RÓTULO DO FERIADO E O MOTIVO 👇
-        function salvarRotulo(chave, elemento) {
+        // 👇 NOVAS FUNÇÕES BLINDADAS PARA SALVAR TEXTO LIVRE 👇
+        window.salvarRotulo = function(elemento) {
+            let chave = elemento.getAttribute('data-chave');
             let dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1,"motivo":"","rotulo":""}');
-            dados.rotulo = elemento.textContent.toUpperCase(); // Salva sempre maiúsculo
+            dados.rotulo = elemento.textContent.toUpperCase();
             salvarNaNuvem(chave, JSON.stringify(dados));
         }
 
-        function salvarMotivo(chave, elemento) {
+        window.salvarMotivo = function(elemento) {
+            let chave = elemento.getAttribute('data-chave');
             let dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1,"motivo":"","rotulo":""}');
             dados.motivo = elemento.textContent;
             salvarNaNuvem(chave, JSON.stringify(dados));
@@ -489,19 +498,17 @@
 
         function obterConteudoLinha(dados, tipo, chave) {
             let rotuloPadrao = "";
-            if (tipo === 'geral') {
-                rotuloPadrao = (dados.estado === ESTADOS.JUSTIFICADA) ? ROTULOS.feriado : ROTULOS.pontoFacultativo;
-            } else {
-                rotuloPadrao = (dados.estado === ESTADOS.JUSTIFICADA) ? ROTULOS.faltaJustificada : ROTULOS.atestadoMedico;
-            }
+            if (tipo === 'geral') { rotuloPadrao = (dados.estado === ESTADOS.JUSTIFICADA) ? ROTULOS.feriado : ROTULOS.pontoFacultativo; } 
+            else { rotuloPadrao = (dados.estado === ESTADOS.JUSTIFICADA) ? ROTULOS.faltaJustificada : ROTULOS.atestadoMedico; }
             
-            // Se já tiver algo salvo na nuvem usa o salvo, senão usa o padrão
             let rotuloExibido = dados.rotulo || rotuloPadrao;
             const classe = tipo === 'geral' ? 'fim-de-semana' : 'linha-individual';
+            let chaveSafe = escapeHtml(chave);
             
+            // Rótulo agora usa a variável chaveSafe com segurança absoluta através de data-chave
             return `<td colspan="5" class="${classe}">
-                <span contenteditable="true" spellcheck="false" style="cursor: text; border-bottom: 1px dashed #999;" onclick="event.stopPropagation()" oninput="salvarRotulo('${chave}', this)">${rotuloExibido}</span> 
-                <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)">${dados.motivo || ''}</span>
+                <span class="rotulo-editavel" data-chave="${chaveSafe}" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarRotulo(this)">${escapeHtml(rotuloExibido)}</span> 
+                <span class="motivo-feriado" data-chave="${chaveSafe}" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo(this)">${escapeHtml(dados.motivo || '')}</span>
             </td>`;
         }
 
@@ -527,7 +534,7 @@
                 removerDaNuvem(chave);
             } else {
                 let dadosAntigos = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : {};
-                // Ao trocar de estado (ex: Feriado pra Facultativo), zera o rótulo pra puxar o padrão
+                // Se clicou de novo e mudou o tipo (ex: de Feriado pra Facultativo), reseta o texto livre para o padrão
                 let novoRotulo = (dadosAntigos.estado === novoEstado) ? (dadosAntigos.rotulo || "") : "";
                 let dados = { estado: novoEstado, motivo: dadosAntigos.motivo || "", rotulo: novoRotulo };
                 
@@ -591,11 +598,13 @@
                 if (diaDaSemana === 0) {
                     tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">DOMINGO</td>`;
                 } else if (diaDaSemana === 6 && !isSabadoAberto) {
-                    // 👇 LINHA CORRIGIDA: SÓ ABRE O SÁBADO SE CLICAR, NÃO RODA CÓDIGO DE FERIADO 👇
-                    tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana" style="cursor: pointer; color: #2B6CB0;" onclick="toggleSabado(${ano}, ${mes}, ${dia})" title="Clique para abrir a linha deste sábado">
-                        <span class="esconder-impressao" style="text-decoration: underline;">SÁBADO (Clique para abrir)</span>
+                    // 👇 LINHA CORRIGIDA DO SÁBADO (Agora o clique está em toda a linha e não cria feriado!) 👇
+                    tr.className = "dia-util";
+                    tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana" style="color: #2B6CB0;">
+                        <span class="esconder-impressao" style="text-decoration: underline; cursor: pointer;">SÁBADO (Clique para abrir)</span>
                         <span class="mostrar-impressao">SÁBADO</span>
                     </td>`;
+                    tr.onclick = function() { toggleSabado(ano, mes, dia); };
                 } else {
                     tr.className = "dia-util";
                     tr.setAttribute('tabindex', '0');
@@ -626,7 +635,6 @@
                         tr.innerHTML = `${celulaDiaHtml}<td></td><td></td><td></td><td></td><td></td>`;
                     }
 
-                    // A linha inteira pode virar feriado ou atestado agora sem conflitar com a abertura do sábado
                     tr.onclick = function() { alternarFeriadoGeral(this, ano, mes, dia, celulaDiaHtml); };
                     tr.oncontextmenu = function(evento) { alternarAusenciaIndividual(this, ano, mes, dia, evento, celulaDiaHtml); };
                 }
