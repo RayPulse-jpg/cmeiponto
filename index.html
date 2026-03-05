@@ -14,7 +14,7 @@
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .controles, .controles-avancados { background-color: #fff; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 10px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 900px; box-sizing: border-box; }
         .grupo-seletor { display: flex; gap: 5px; align-items: center; }
-        select, button { padding: 8px 12px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
+        select, button, input { padding: 8px 12px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         select { cursor: pointer; transition: border-color 0.2s; } select:hover { border-color: #3182CE; }
         button { background-color: #4A5568; color: white; border: none; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
         
@@ -57,13 +57,13 @@
 
         /* Janela Modal e Loader */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 320px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
-        .modal-content h3 { margin: 0 0 10px 0; color: #2d3748; text-align: center; } .modal-content input { padding: 10px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 14px; }
-        .modal-botoes { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; } .modal-botoes button { flex: 1; } .btn-cancelar { background-color: #e53e3e; } .btn-cancelar:hover { background-color: #c53030; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 340px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
+        .modal-content h3 { margin: 0 0 10px 0; color: #2d3748; text-align: center; } 
+        .modal-botoes { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; } .modal-botoes button { flex: 1; padding: 10px; } .btn-cancelar { background-color: #e53e3e; } .btn-cancelar:hover { background-color: #c53030; }
         
         #tela-carregamento { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f4f9; justify-content: center; align-items: center; z-index: 9999; font-size: 20px; font-weight: bold; color: #3182CE; }
 
-        /* 👇 ESTILOS DA NOVA TELA DE LOGIN 👇 */
+        /* Tela de Login */
         #tela-login { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #2d3748; display: flex; justify-content: center; align-items: center; z-index: 10000; }
         .login-box { background: white; padding: 40px 30px; border-radius: 10px; box-shadow: 0 15px 25px rgba(0,0,0,0.3); width: 100%; max-width: 350px; text-align: center; }
         .login-box h2 { margin: 0 0 5px 0; color: #1a202c; font-size: 22px; }
@@ -75,6 +75,10 @@
 
         /* Área do Lote de Impressão */
         #print-wrapper { display: none; width: 100%; } .quebra-pagina { page-break-after: always; margin-bottom: 20px; }
+
+        /* Optgroup styling no seletor */
+        optgroup { font-weight: bold; color: #2B6CB0; background: #f7fafc; }
+        option { color: #333; background: #fff; font-weight: normal; }
 
         /* Regras Rigorosas de Impressão */
         @media print {
@@ -142,7 +146,20 @@
             <h3>Cadastrar Novo Servidor</h3>
             <input type="text" id="novo-nome" placeholder="Nome Completo" oninput="this.value = this.value.toUpperCase()">
             <input type="text" id="novo-cpf" placeholder="CPF (Apenas números ou com traços)">
-            <input type="text" id="novo-cargo" placeholder="Cargo ou Função" oninput="this.value = this.value.toUpperCase()">
+            <input type="text" id="novo-cargo" placeholder="Cargo (Ex: Auxiliar)" oninput="this.value = this.value.toUpperCase()">
+            
+            <select id="novo-categoria" style="width: 100%;">
+                <option value="">-- Selecione o Setor --</option>
+                <option value="A - DIREÇÃO E COORDENAÇÃO">Direção e Coordenação</option>
+                <option value="B - PROFESSORES">Professores</option>
+                <option value="C - AUXILIARES DE CLASSE">Auxiliares de Classe</option>
+                <option value="D - SECRETARIA">Secretaria</option>
+                <option value="E - SERVIÇOS GERAIS">Serviços Gerais</option>
+                <option value="F - COZINHA E MERENDA">Cozinha e Merenda</option>
+                <option value="G - PORTARIA E SEGURANÇA">Portaria e Segurança</option>
+                <option value="H - OUTROS">Outros</option>
+            </select>
+
             <div class="modal-botoes">
                 <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
                 <button class="btn-add" onclick="salvarNovoServidor()">Salvar na Nuvem</button>
@@ -201,13 +218,9 @@
 
     <script>
         // ----------------------------------------------------
-        // 1. CONEXÃO COM O FIREBASE E OFUSCAÇÃO DA CHAVE
+        // 1. CONEXÃO COM O FIREBASE
         // ----------------------------------------------------
-        
-        const pt1 = "AIzaSyCswoX";
-        const pt2 = "WBPacdMKfHKUBil";
-        const pt3 = "i4SwHUj7566L8";
-
+        const pt1 = "AIzaSyCswoX"; const pt2 = "WBPacdMKfHKUBil"; const pt3 = "i4SwHUj7566L8";
         const firebaseConfig = {
             apiKey: pt1 + pt2 + pt3,
             authDomain: "folha-de-ponto-cmei.firebaseapp.com",
@@ -218,7 +231,6 @@
             appId: "1:363750832405:web:d0050043e6f2b4fde1111c",
             measurementId: "G-L5VZDVXHG6"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const auth = firebase.auth();
@@ -227,64 +239,34 @@
         let bancoServidores = [];
 
         // ----------------------------------------------------
-        // 2. LÓGICA DE LOGIN E AUTENTICAÇÃO
+        // 2. LÓGICA DE LOGIN 
         // ----------------------------------------------------
-        
-        // Verifica se a pessoa já está logada quando entra no site
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // Se tem crachá válido, esconde o login e mostra a tela de carregamento
                 document.getElementById('tela-login').style.display = 'none';
                 document.getElementById('tela-carregamento').style.display = 'flex';
                 carregarDadosDaNuvem();
             } else {
-                // Se não tem crachá, mostra o login
                 document.getElementById('tela-login').style.display = 'flex';
                 document.getElementById('tela-carregamento').style.display = 'none';
-                
-                // Limpa a tela de trás por segurança
                 document.getElementById('corpo-tabela').innerHTML = '';
             }
         });
 
-        // Função chamada pelo botão "Entrar"
         function fazerLogin() {
             const email = document.getElementById('login-email').value;
             const senha = document.getElementById('login-senha').value;
             const msgErro = document.getElementById('mensagem-erro');
-
-            if (!email || !senha) {
-                msgErro.innerText = "Preencha o e-mail e a senha.";
-                msgErro.style.display = 'block';
-                return;
-            }
-
-            auth.signInWithEmailAndPassword(email, senha)
-                .then(() => {
-                    msgErro.style.display = 'none';
-                    // O onAuthStateChanged lá em cima vai assumir o controle agora!
-                })
-                .catch((error) => {
-                    msgErro.innerText = "E-mail ou senha incorretos!";
-                    msgErro.style.display = 'block';
-                    console.error("Erro no login:", error);
-                });
+            if (!email || !senha) { msgErro.innerText = "Preencha o e-mail e a senha."; msgErro.style.display = 'block'; return; }
+            auth.signInWithEmailAndPassword(email, senha).then(() => { msgErro.style.display = 'none'; }).catch((error) => { msgErro.innerText = "E-mail ou senha incorretos!"; msgErro.style.display = 'block'; });
         }
 
-        // Função chamada pelo botão "Sair"
         function fazerLogout() {
-            auth.signOut().then(() => {
-                // Limpa a memória local
-                memoriaNuvem = {};
-                bancoServidores = [];
-                document.getElementById('login-senha').value = '';
-            }).catch((error) => {
-                console.error("Erro ao sair:", error);
-            });
+            auth.signOut().then(() => { memoriaNuvem = {}; bancoServidores = []; document.getElementById('login-senha').value = ''; });
         }
 
         // ----------------------------------------------------
-        // 3. CARREGAMENTO DOS DADOS (SÓ RODA SE LOGADO)
+        // 3. CARREGAMENTO DOS DADOS E ORDENAÇÃO
         // ----------------------------------------------------
         function carregarDadosDaNuvem() {
             database.ref('cmei_dados').once('value').then((snapshot) => {
@@ -292,49 +274,65 @@
                 
                 if(memoriaNuvem['listaServidores']) {
                     bancoServidores = JSON.parse(memoriaNuvem['listaServidores']);
+                    // Correção retroativa para funcionários antigos
+                    bancoServidores.forEach(s => { if(!s.categoria) s.categoria = "H - OUTROS"; });
                 } else {
-                    bancoServidores = [{ nome: "FERNANDA DE JESUS ALMEIDA", cpf: "049.131.865-07", cargo: "AUXILIAR DE COORDENAÇÃO" }];
+                    bancoServidores = [{ nome: "FERNANDA DE JESUS ALMEIDA", cpf: "049.131.865-07", cargo: "AUXILIAR DE COORDENAÇÃO", categoria: "A - DIREÇÃO E COORDENAÇÃO" }];
                 }
 
                 document.getElementById('tela-carregamento').style.display = 'none'; 
                 carregarListaServidores(); 
                 carregarDadosEditaveis();
                 gerarFolha();
-            }).catch((erro) => {
-                alert("Erro ao conectar no banco de dados. Verifique a internet e recarregue a página.");
-                console.error(erro);
+            }).catch((erro) => { alert("Erro ao conectar no banco de dados."); });
+        }
+
+        function salvarNaNuvem(chave, valor) { memoriaNuvem[chave] = valor; database.ref('cmei_dados/' + chave).set(valor); }
+        function removerDaNuvem(chave) { delete memoriaNuvem[chave]; database.ref('cmei_dados/' + chave).remove(); }
+        function revelarBackup() { const painel = document.getElementById('painel-secreto'); painel.style.display = painel.style.display === 'none' ? 'flex' : 'none'; if(painel.style.display === 'flex') alert("🔓 Modo Administrador ativado!"); }
+
+        // ----------------------------------------------------
+        // 4. SISTEMA DE SERVIDORES (AGORA COM CATEGORIAS)
+        // ----------------------------------------------------
+        function organizarEOrdenarServidores() {
+            // Ordena primeiro pela Categoria (A, B, C...) e depois alfabeticamente pelo Nome
+            bancoServidores.sort((a, b) => {
+                let catA = a.categoria || "H - OUTROS";
+                let catB = b.categoria || "H - OUTROS";
+                if (catA < catB) return -1;
+                if (catA > catB) return 1;
+                return a.nome.localeCompare(b.nome);
             });
         }
 
-        function salvarNaNuvem(chave, valor) {
-            memoriaNuvem[chave] = valor; 
-            database.ref('cmei_dados/' + chave).set(valor); 
-        }
-
-        function removerDaNuvem(chave) {
-            delete memoriaNuvem[chave];
-            database.ref('cmei_dados/' + chave).remove();
-        }
-
-        // Função do Botão Secreto
-        function revelarBackup() {
-            const painel = document.getElementById('painel-secreto');
-            if (painel.style.display === 'none') {
-                painel.style.display = 'flex';
-                alert("🔓 Modo Administrador ativado: Opções de Backup liberadas!");
-            } else {
-                painel.style.display = 'none';
-            }
-        }
-
-        // ----------------------------------------------------
-        // 4. SISTEMA DE SERVIDORES
-        // ----------------------------------------------------
         function carregarListaServidores() {
             const seletor = document.getElementById('seletor-servidor');
             seletor.innerHTML = '<option value="">-- Selecione ou Digite Abaixo --</option>'; 
+            
+            organizarEOrdenarServidores(); // Garante a ordem antes de mostrar na tela
+
+            let categoriaAtual = "";
+            let optGroupAtual = null;
+
             bancoServidores.forEach((servidor, index) => {
-                let opcao = document.createElement('option'); opcao.value = index; opcao.text = servidor.nome; seletor.appendChild(opcao);
+                let cat = servidor.categoria || "H - OUTROS";
+                
+                // Limpa a letra de ordenação visualmente (ex: tira o "A - " de "A - DIREÇÃO")
+                let nomeCategoriaLimpo = cat.substring(4); 
+
+                // Cria um divisor novo sempre que a categoria mudar
+                if (cat !== categoriaAtual) {
+                    categoriaAtual = cat;
+                    optGroupAtual = document.createElement('optgroup');
+                    optGroupAtual.label = "📌 " + nomeCategoriaLimpo;
+                    seletor.appendChild(optGroupAtual);
+                }
+
+                let opcao = document.createElement('option'); 
+                opcao.value = index; 
+                opcao.text = servidor.nome; 
+                
+                if(optGroupAtual) { optGroupAtual.appendChild(opcao); } else { seletor.appendChild(opcao); }
             });
         }
 
@@ -350,22 +348,32 @@
                 document.getElementById('servidor-cpf').innerText = "000.000.000-00";
                 document.getElementById('servidor-cargo').innerText = "...";
             }
-            salvarDadosEditaveis();
-            gerarFolha(); 
+            salvarDadosEditaveis(); gerarFolha(); 
         }
 
         function abrirModal() { document.getElementById('modalAdd').style.display = 'flex'; }
-        function fecharModal() { document.getElementById('modalAdd').style.display = 'none'; document.getElementById('novo-nome').value = ''; document.getElementById('novo-cpf').value = ''; document.getElementById('novo-cargo').value = ''; }
+        function fecharModal() { document.getElementById('modalAdd').style.display = 'none'; document.getElementById('novo-nome').value = ''; document.getElementById('novo-cpf').value = ''; document.getElementById('novo-cargo').value = ''; document.getElementById('novo-categoria').value = ''; }
 
         function salvarNovoServidor() {
-            let nome = document.getElementById('novo-nome').value.trim(); let cpf = document.getElementById('novo-cpf').value.trim(); let cargo = document.getElementById('novo-cargo').value.trim();
-            if(!nome || !cpf || !cargo) { alert("Preencha todos os campos!"); return; }
+            let nome = document.getElementById('novo-nome').value.trim(); 
+            let cpf = document.getElementById('novo-cpf').value.trim(); 
+            let cargo = document.getElementById('novo-cargo').value.trim();
+            let categoria = document.getElementById('novo-categoria').value;
+
+            if(!nome || !cpf || !cargo || !categoria) { alert("Preencha todos os campos e selecione o Setor!"); return; }
             if(bancoServidores.some(s => s.cpf === cpf || s.nome === nome)) { alert("❌ Erro: Já existe um servidor com este Nome ou CPF!"); return; }
 
-            bancoServidores.push({ nome: nome, cpf: cpf, cargo: cargo });
+            bancoServidores.push({ nome: nome, cpf: cpf, cargo: cargo, categoria: categoria });
+            
+            organizarEOrdenarServidores(); // Reordena a lista com o novo membro
             salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores)); 
+            
             carregarListaServidores(); fecharModal(); 
-            document.getElementById('seletor-servidor').value = bancoServidores.length - 1; preencherServidor();
+            
+            // Acha a nova posição do funcionário que acabou de ser adicionado
+            let novaPosicao = bancoServidores.findIndex(s => s.cpf === cpf);
+            document.getElementById('seletor-servidor').value = novaPosicao; 
+            preencherServidor();
         }
 
         function removerServidor() {
@@ -381,112 +389,55 @@
         // ----------------------------------------------------
         // 5. LÓGICA DE FERIADOS E FALTAS 
         // ----------------------------------------------------
-        function salvarDadosEditaveis() {
-            const campos = document.querySelectorAll('.editavel');
-            campos.forEach(campo => { if (campo.id) salvarNaNuvem(campo.id, campo.innerText); });
-        }
-
-        function carregarDadosEditaveis() {
-            const campos = document.querySelectorAll('.editavel');
-            campos.forEach(campo => {
-                if (campo.id && memoriaNuvem[campo.id]) { campo.innerText = memoriaNuvem[campo.id]; }
-                campo.addEventListener('input', salvarDadosEditaveis);
-            });
-        }
-
-        function salvarMotivo(chave, elemento) {
-            let dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1, "motivo":""}');
-            dados.motivo = elemento.innerText;
-            salvarNaNuvem(chave, JSON.stringify(dados));
-        }
+        function salvarDadosEditaveis() { const campos = document.querySelectorAll('.editavel'); campos.forEach(campo => { if (campo.id) salvarNaNuvem(campo.id, campo.innerText); }); }
+        function carregarDadosEditaveis() { const campos = document.querySelectorAll('.editavel'); campos.forEach(campo => { if (campo.id && memoriaNuvem[campo.id]) { campo.innerText = memoriaNuvem[campo.id]; } campo.addEventListener('input', salvarDadosEditaveis); }); }
+        function salvarMotivo(chave, elemento) { let dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1, "motivo":""}'); dados.motivo = elemento.innerText; salvarNaNuvem(chave, JSON.stringify(dados)); }
 
         function alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero) {
-            let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-geral') || '0');
-            let novoEstado = (estadoAtual + 1) % 3;
-            linhaElemento.setAttribute('data-estado-geral', novoEstado);
-            linhaElemento.setAttribute('data-estado-individual', '0');
-            
-            let chave = `feriado_${ano}_${mes}_${diaNumero}`;
-            let cpf = document.getElementById('servidor-cpf').innerText;
-            removerDaNuvem(`ausencia_${cpf}_${ano}_${mes}_${diaNumero}`); 
+            let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-geral') || '0'); let novoEstado = (estadoAtual + 1) % 3;
+            linhaElemento.setAttribute('data-estado-geral', novoEstado); linhaElemento.setAttribute('data-estado-individual', '0');
+            let chave = `feriado_${ano}_${mes}_${diaNumero}`; let cpf = document.getElementById('servidor-cpf').innerText; removerDaNuvem(`ausencia_${cpf}_${ano}_${mes}_${diaNumero}`); 
 
-            if (novoEstado === 0) {
-                linhaElemento.innerHTML = `<td>${diaNumero}</td><td></td><td></td><td></td><td></td><td></td>`;
-                removerDaNuvem(chave); 
-            } else if (novoEstado === 1) {
-                linhaElemento.innerHTML = `<td>${diaNumero}</td><td colspan="5" class="fim-de-semana">FERIADO <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)"></span></td>`;
-                salvarNaNuvem(chave, JSON.stringify({ estado: 1, motivo: "" })); 
-            } else if (novoEstado === 2) {
-                linhaElemento.innerHTML = `<td>${diaNumero}</td><td colspan="5" class="fim-de-semana">PONTO FACULTATIVO <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)"></span></td>`;
-                salvarNaNuvem(chave, JSON.stringify({ estado: 2, motivo: "" })); 
-            }
+            if (novoEstado === 0) { linhaElemento.innerHTML = `<td>${diaNumero}</td><td></td><td></td><td></td><td></td><td></td>`; removerDaNuvem(chave); } 
+            else if (novoEstado === 1) { linhaElemento.innerHTML = `<td>${diaNumero}</td><td colspan="5" class="fim-de-semana">FERIADO <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)"></span></td>`; salvarNaNuvem(chave, JSON.stringify({ estado: 1, motivo: "" })); } 
+            else if (novoEstado === 2) { linhaElemento.innerHTML = `<td>${diaNumero}</td><td colspan="5" class="fim-de-semana">PONTO FACULTATIVO <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)"></span></td>`; salvarNaNuvem(chave, JSON.stringify({ estado: 2, motivo: "" })); }
         }
 
         function alternarAusenciaIndividual(linhaElemento, ano, mes, diaNumero, evento) {
-            evento.preventDefault(); 
-            let cpf = document.getElementById('servidor-cpf').innerText;
-            if(cpf === "000.000.000-00" || cpf === "") { alert("⚠️ Selecione um servidor primeiro."); return; }
-
-            let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-individual') || '0');
-            let novoEstado = (estadoAtual + 1) % 3;
-            linhaElemento.setAttribute('data-estado-individual', novoEstado);
-            
+            evento.preventDefault(); let cpf = document.getElementById('servidor-cpf').innerText; if(cpf === "000.000.000-00" || cpf === "") { alert("⚠️ Selecione um servidor primeiro."); return; }
+            let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-individual') || '0'); let novoEstado = (estadoAtual + 1) % 3; linhaElemento.setAttribute('data-estado-individual', novoEstado);
             let chave = `ausencia_${cpf}_${ano}_${mes}_${diaNumero}`;
 
             if (novoEstado === 0) {
                 let temFeriadoGeral = memoriaNuvem[`feriado_${ano}_${mes}_${diaNumero}`];
-                if(temFeriadoGeral) {
-                    linhaElemento.setAttribute('data-estado-geral', '0'); 
-                    alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero); alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero); 
-                } else {
-                    linhaElemento.innerHTML = `<td>${diaNumero}</td><td></td><td></td><td></td><td></td><td></td>`;
-                }
-                removerDaNuvem(chave);
-            } else if (novoEstado === 1) {
-                linhaElemento.innerHTML = `<td>${diaNumero}</td><td colspan="5" class="linha-individual">FALTA JUSTIFICADA <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)"></span></td>`;
-                salvarNaNuvem(chave, JSON.stringify({ estado: 1, motivo: "" })); 
-            } else if (novoEstado === 2) {
-                linhaElemento.innerHTML = `<td>${diaNumero}</td><td colspan="5" class="linha-individual">ATESTADO MÉDICO <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)"></span></td>`;
-                salvarNaNuvem(chave, JSON.stringify({ estado: 2, motivo: "" })); 
-            }
+                if(temFeriadoGeral) { linhaElemento.setAttribute('data-estado-geral', '0'); alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero); alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero); } else { linhaElemento.innerHTML = `<td>${diaNumero}</td><td></td><td></td><td></td><td></td><td></td>`; } removerDaNuvem(chave);
+            } else if (novoEstado === 1) { linhaElemento.innerHTML = `<td>${diaNumero}</td><td colspan="5" class="linha-individual">FALTA JUSTIFICADA <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)"></span></td>`; salvarNaNuvem(chave, JSON.stringify({ estado: 1, motivo: "" })); } 
+            else if (novoEstado === 2) { linhaElemento.innerHTML = `<td>${diaNumero}</td><td colspan="5" class="linha-individual">ATESTADO MÉDICO <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)"></span></td>`; salvarNaNuvem(chave, JSON.stringify({ estado: 2, motivo: "" })); }
         }
 
         function gerarFolha() {
-            const selectMes = document.getElementById('mes'); const mes = parseInt(selectMes.value); const nomeMes = selectMes.options[selectMes.selectedIndex].text;
-            const ano = parseInt(document.getElementById('ano').value); const cpfAtual = document.getElementById('servidor-cpf').innerText;
-            
+            const selectMes = document.getElementById('mes'); const mes = parseInt(selectMes.value); const nomeMes = selectMes.options[selectMes.selectedIndex].text; const ano = parseInt(document.getElementById('ano').value); const cpfAtual = document.getElementById('servidor-cpf').innerText;
             document.getElementById('titulo-periodo').innerText = `Folha de Ponto - Período: ${nomeMes} ${ano}`;
-            const corpoTabela = document.getElementById('corpo-tabela'); corpoTabela.innerHTML = '';
-            const diasNoMes = new Date(ano, mes, 0).getDate();
+            const corpoTabela = document.getElementById('corpo-tabela'); corpoTabela.innerHTML = ''; const diasNoMes = new Date(ano, mes, 0).getDate();
 
             for (let dia = 1; dia <= diasNoMes; dia++) {
                 const data = new Date(ano, mes - 1, dia); const diaDaSemana = data.getDay(); const tr = document.createElement('tr');
-
-                if (diaDaSemana === 0) { tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">DOMINGO</td>`; } 
-                else if (diaDaSemana === 6) { tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">SÁBADO</td>`; } 
-                else { 
+                if (diaDaSemana === 0) { tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">DOMINGO</td>`; } else if (diaDaSemana === 6) { tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">SÁBADO</td>`; } else { 
                     tr.className = "dia-util";
                     let chaveGeral = `feriado_${ano}_${mes}_${dia}`; let dadosGeral = memoriaNuvem[chaveGeral];
                     let chaveIndiv = `ausencia_${cpfAtual}_${ano}_${mes}_${dia}`; let dadosIndiv = memoriaNuvem[chaveIndiv];
 
                     if (dadosIndiv) {
-                        let info = JSON.parse(dadosIndiv); tr.setAttribute('data-estado-individual', info.estado);
-                        let texto = info.estado === 1 ? "FALTA JUSTIFICADA" : "ATESTADO MÉDICO";
+                        let info = JSON.parse(dadosIndiv); tr.setAttribute('data-estado-individual', info.estado); let texto = info.estado === 1 ? "FALTA JUSTIFICADA" : "ATESTADO MÉDICO";
                         tr.innerHTML = `<td>${dia}</td><td colspan="5" class="linha-individual">${texto} <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chaveIndiv}', this)">${info.motivo}</span></td>`;
-                    } 
-                    else if (dadosGeral) {
-                        let info = JSON.parse(dadosGeral); tr.setAttribute('data-estado-geral', info.estado);
-                        let texto = info.estado === 1 ? "FERIADO" : "PONTO FACULTATIVO";
+                    } else if (dadosGeral) {
+                        let info = JSON.parse(dadosGeral); tr.setAttribute('data-estado-geral', info.estado); let texto = info.estado === 1 ? "FERIADO" : "PONTO FACULTATIVO";
                         tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">${texto} <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chaveGeral}', this)">${info.motivo}</span></td>`;
-                    } 
-                    else {
-                        tr.setAttribute('data-estado-geral', '0'); tr.setAttribute('data-estado-individual', '0');
-                        tr.innerHTML = `<td>${dia}</td><td></td><td></td><td></td><td></td><td></td>`;
+                    } else {
+                        tr.setAttribute('data-estado-geral', '0'); tr.setAttribute('data-estado-individual', '0'); tr.innerHTML = `<td>${dia}</td><td></td><td></td><td></td><td></td><td></td>`;
                     }
-                    tr.onclick = function() { alternarFeriadoGeral(this, ano, mes, dia); };
-                    tr.oncontextmenu = function(evento) { alternarAusenciaIndividual(this, ano, mes, dia, evento); };
-                }
-                corpoTabela.appendChild(tr);
+                    tr.onclick = function() { alternarFeriadoGeral(this, ano, mes, dia); }; tr.oncontextmenu = function(evento) { alternarAusenciaIndividual(this, ano, mes, dia, evento); };
+                } corpoTabela.appendChild(tr);
             }
         }
 
@@ -502,38 +453,15 @@
             for(let i = 0; i < bancoServidores.length; i++) {
                 document.getElementById('seletor-servidor').value = i; preencherServidor(); 
                 let cloneArea = document.getElementById('folha-impressao').cloneNode(true);
-                cloneArea.removeAttribute('id'); cloneArea.classList.add('quebra-pagina');
-                printWrapper.appendChild(cloneArea);
+                cloneArea.removeAttribute('id'); cloneArea.classList.add('quebra-pagina'); printWrapper.appendChild(cloneArea);
             }
             setTimeout(() => { window.print(); }, 300);
 
-            window.onafterprint = function() {
-                document.body.classList.remove('modo-lote'); printWrapper.innerHTML = ''; 
-                document.getElementById('seletor-servidor').value = indiceOriginal !== "" ? indiceOriginal : "";
-                preencherServidor(); window.onafterprint = null; 
-            };
+            window.onafterprint = function() { document.body.classList.remove('modo-lote'); printWrapper.innerHTML = ''; document.getElementById('seletor-servidor').value = indiceOriginal !== "" ? indiceOriginal : ""; preencherServidor(); window.onafterprint = null; };
         }
 
-        function exportarBackup() {
-            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(memoriaNuvem));
-            let link = document.createElement("a"); link.setAttribute("href", dataStr); link.setAttribute("download", "backup_escola_pontos.json");
-            document.body.appendChild(link); link.click(); link.remove();
-        }
-
-        function importarBackup(evento) {
-            let ficheiro = evento.target.files[0]; if (!ficheiro) return;
-            let leitor = new FileReader();
-            leitor.onload = function(e) {
-                try {
-                    let dados = JSON.parse(e.target.result);
-                    database.ref('cmei_dados').set(dados).then(() => {
-                        alert("✅ Backup restaurado com sucesso na NUVEM! A página será reiniciada.");
-                        location.reload(); 
-                    });
-                } catch(err) { alert("❌ Arquivo inválido ou corrompido!"); }
-            };
-            leitor.readAsText(ficheiro); evento.target.value = ""; 
-        }
+        function exportarBackup() { let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(memoriaNuvem)); let link = document.createElement("a"); link.setAttribute("href", dataStr); link.setAttribute("download", "backup_escola_pontos.json"); document.body.appendChild(link); link.click(); link.remove(); }
+        function importarBackup(evento) { let ficheiro = evento.target.files[0]; if (!ficheiro) return; let leitor = new FileReader(); leitor.onload = function(e) { try { let dados = JSON.parse(e.target.result); database.ref('cmei_dados').set(dados).then(() => { alert("✅ Backup restaurado!"); location.reload(); }); } catch(err) { alert("❌ Arquivo inválido!"); } }; leitor.readAsText(ficheiro); evento.target.value = ""; }
     </script>
 </body>
 </html>
