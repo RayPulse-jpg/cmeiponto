@@ -7,6 +7,7 @@
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 
     <style>
         /* Estilos Gerais */
@@ -135,7 +136,7 @@
                 <img src="logo.png" alt="Logo da Unidade" onerror="this.style.display='none'">
             </div>
             <div class="cabecalho-textos">
-                <h3>CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL MARIA JANDIRA DE SOUSA FONSECA</h3>
+                <h3>CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL MARIA JANDIRA DE SOUZA FONSECA</h3>
                 <p>Rua Maria Madalena – Centro – Cep: 48.415-000 | Fátima - Bahia</p>
                 <p>E-mail: mariajandira2015@hotmail.com | CNPJ: 24.755.198/0001-81</p>
                 <h2 id="titulo-periodo">Folha de Ponto - Período: MARÇO 2026</h2>
@@ -177,14 +178,18 @@
     </div>
 
     <script>
+        // ----------------------------------------------------
+        // 1. CONEXÃO COM O FIREBASE E OFUSCAÇÃO DA CHAVE
+        // ----------------------------------------------------
+        
         const pt1 = "AIzaSyCswoX";
         const pt2 = "WBPacdMKfHKUBil";
         const pt3 = "i4SwHUj7566L8";
 
         const firebaseConfig = {
-            apiKey: pt1 + pt2 + pt3, 
-            databaseURL: "https://folha-de-ponto-cmei-default-rtdb.firebaseio.com/",
+            apiKey: pt1 + pt2 + pt3,
             authDomain: "folha-de-ponto-cmei.firebaseapp.com",
+            databaseURL: "https://folha-de-ponto-cmei-default-rtdb.firebaseio.com",
             projectId: "folha-de-ponto-cmei",
             storageBucket: "folha-de-ponto-cmei.firebasestorage.app",
             messagingSenderId: "363750832405",
@@ -198,24 +203,33 @@
         let memoriaNuvem = {};
         let bancoServidores = [];
 
+        // 👇 AQUI ACONTECE O LOGIN INVISÍVEL ANTES DE PUXAR OS DADOS 👇
         window.onload = function() {
-            database.ref('cmei_dados').once('value').then((snapshot) => {
-                memoriaNuvem = snapshot.val() || {};
+            firebase.auth().signInAnonymously().then(() => {
                 
-                if(memoriaNuvem['listaServidores']) {
-                    bancoServidores = JSON.parse(memoriaNuvem['listaServidores']);
-                } else {
-                    bancoServidores = [{ nome: "FERNANDA DE JESUS ALMEIDA", cpf: "049.131.865-07", cargo: "AUXILIAR DE COORDENAÇÃO" }];
-                }
+                database.ref('cmei_dados').once('value').then((snapshot) => {
+                    memoriaNuvem = snapshot.val() || {};
+                    
+                    if(memoriaNuvem['listaServidores']) {
+                        bancoServidores = JSON.parse(memoriaNuvem['listaServidores']);
+                    } else {
+                        bancoServidores = [{ nome: "FERNANDA DE JESUS ALMEIDA", cpf: "049.131.865-07", cargo: "AUXILIAR DE COORDENAÇÃO" }];
+                    }
 
-                document.getElementById('tela-carregamento').style.display = 'none'; 
-                
-                carregarListaServidores(); 
-                carregarDadosEditaveis();
-                gerarFolha();
-            }).catch((erro) => {
-                alert("Erro ao conectar no banco de dados. Verifique a internet e recarregue a página.");
-                console.error(erro);
+                    document.getElementById('tela-carregamento').style.display = 'none'; 
+                    carregarListaServidores(); 
+                    carregarDadosEditaveis();
+                    gerarFolha();
+                }).catch((erro) => {
+                    alert("Erro ao conectar no banco de dados. Verifique a internet e recarregue a página.");
+                    console.error(erro);
+                });
+
+            }).catch((error) => {
+                // Se alguém acessar de fora e o Google negar o crachá, a tela trava aqui!
+                document.getElementById('tela-carregamento').innerText = "🚫 Acesso Negado pelo Servidor de Segurança.";
+                document.getElementById('tela-carregamento').style.color = "red";
+                console.error("Erro de segurança: ", error);
             });
         };
 
@@ -450,5 +464,3 @@
     </script>
 </body>
 </html>
-
-
