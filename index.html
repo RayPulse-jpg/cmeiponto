@@ -33,12 +33,11 @@
         .cabecalho-textos h3 { margin: 0; font-size: 14px; font-weight: bold; } .cabecalho-textos p { margin: 2px 0; font-size: 12px; } .cabecalho-textos h2 { margin: 15px 0 0 0; font-size: 16px; }
         .aviso-clique { text-align: center; font-size: 12px; color: #e53e3e; margin-bottom: 10px; font-weight: bold; }
         
-        /* Tabela */
         .tabela-info, .tabela-ponto { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 13px; }
         .tabela-info td, .tabela-ponto th, .tabela-ponto td { border: 1px solid #000; padding: 4px 6px; }
         .tabela-info td { font-weight: bold; padding: 8px; }
         .tabela-ponto th { background-color: #f0f0f0; text-align: center; padding: 8px 4px; }
-        .tabela-ponto td { text-align: center; height: 32px; } /* Altura grande para assinar na tela */
+        .tabela-ponto td { text-align: center; height: 32px; } 
         .fim-de-semana { background-color: #e2e8f0; font-weight: bold; letter-spacing: 2px; }
         .linha-individual { background-color: #fefcbf; font-weight: bold; letter-spacing: 1px; color: #744210; }
         .dia-util { cursor: pointer; transition: background-color 0.2s; } .dia-util:hover { background-color: #edf2f7; }
@@ -70,16 +69,14 @@
         optgroup { font-weight: bold; color: #2B6CB0; background: #f7fafc; }
         option { color: #333; background: #fff; font-weight: normal; }
         
-        /* 👇 REGRAS MÁGICAS DE IMPRESSÃO - AJUSTADAS PARA CABER EM 1 PÁGINA 👇 */
         @media print {
             body { background-color: #fff; padding: 0; margin: 0; } 
-            @page { margin: 0.8cm; } /* Margens do papel ligeiramente reduzidas */
+            @page { margin: 0.8cm; } 
             .controles, .controles-avancados, .aviso-clique, .modal-overlay, #tela-carregamento, #tela-login { display: none !important; }
             .editavel { background-color: transparent; border: none; padding: 0; } .dia-util { cursor: default; } .motivo-feriado { border: none; } .motivo-feriado:empty:before { content: ""; }
             body.modo-lote #folha-impressao { display: none !important; } body.modo-lote #print-wrapper { display: block !important; }
             body:not(.modo-lote) #folha-impressao { display: block !important; box-shadow: none; padding: 0; border: none; } body:not(.modo-lote) #print-wrapper { display: none !important; }
             
-            /* Encolhe a tabela apenas no papel para não vazar a página */
             .tabela-ponto td { height: 23px !important; } 
             .tabela-info, .tabela-ponto { margin-bottom: 8px !important; }
             .cabecalho-container { margin-bottom: 5px !important; min-height: 70px !important; }
@@ -128,7 +125,20 @@
     </div>
 
     <div class="controles-avancados">
-        <button class="btn-lote" onclick="imprimirTodosLote()">🖨️ Imprimir Todos da Lista</button>
+        <select id="filtro-setor" style="font-weight: bold; color: #4A5568;">
+            <option value="TODOS">🗂️ TODOS OS SETORES</option>
+            <option value="A - DIREÇÃO E COORDENAÇÃO">A - DIREÇÃO E COORDENAÇÃO</option>
+            <option value="B - PROFESSORES">B - PROFESSORES</option>
+            <option value="C - AUXILIARES DE CLASSE">C - AUXILIARES DE CLASSE</option>
+            <option value="D - SECRETARIA">D - SECRETARIA</option>
+            <option value="E - SERVIÇOS GERAIS">E - SERVIÇOS GERAIS</option>
+            <option value="F - COZINHA E MERENDA">F - COZINHA E MERENDA</option>
+            <option value="G - PORTARIA E SEGURANÇA">G - PORTARIA E SEGURANÇA</option>
+            <option value="H - OUTROS">H - OUTROS</option>
+        </select>
+
+        <button class="btn-lote" onclick="imprimirTodosLote()">🖨️ Imprimir em Lote</button>
+        
         <div id="painel-secreto" style="display: none; gap: 15px;">
             <button class="btn-backup" onclick="exportarBackup()">💾 Exportar Backup em Nuvem</button>
             <button class="btn-backup" onclick="document.getElementById('file-import').click()">📂 Restaurar Backup</button>
@@ -140,7 +150,7 @@
         <div class="modal-content">
             <h3>Cadastrar Novo Servidor</h3>
             <input type="text" id="novo-nome" placeholder="Nome Completo" oninput="this.value = this.value.toUpperCase()">
-            <input type="text" id="novo-cpf" placeholder="CPF (Apenas números ou com traços)">
+            <input type="text" id="novo-cpf" placeholder="CPF (Apenas números)" oninput="mascaraCPF(this)" maxlength="14">
             <input type="text" id="novo-cargo" placeholder="Cargo (Ex: Auxiliar)" oninput="this.value = this.value.toUpperCase()">
             <select id="novo-categoria" style="width: 100%;">
                 <option value="">-- Selecione o Setor --</option>
@@ -240,6 +250,15 @@
 
         let memoriaNuvem = {};
         let bancoServidores = [];
+
+        function mascaraCPF(campo) {
+            let cpf = campo.value;
+            cpf = cpf.replace(/\D/g, ""); 
+            cpf = cpf.replace(/(\d{3})(\d)/, "$1.$2"); 
+            cpf = cpf.replace(/(\d{3})(\d)/, "$1.$2"); 
+            cpf = cpf.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); 
+            campo.value = cpf;
+        }
 
         function cpfBasicoValido(cpf) {
             return cpf.replace(/[^\d]/g, '').length === 11;
@@ -459,7 +478,6 @@
             linhaElemento.setAttribute('data-estado-geral', novoEstado);
             linhaElemento.setAttribute('data-estado-individual', '0');
 
-            // CORREÇÃO: Usamos o Nome do Servidor como chave para evitar conflito com CPFs zerados
             let nomeAtual = document.getElementById('servidor-nome').textContent;
             let chave = `feriado_${ano}_${mes}_${diaNumero}`;
             removerDaNuvem(`ausencia_${nomeAtual}_${ano}_${mes}_${diaNumero}`);
@@ -477,8 +495,6 @@
 
         function alternarAusenciaIndividual(linhaElemento, ano, mes, diaNumero, evento) {
             evento.preventDefault();
-            
-            // CORREÇÃO: Validação agora checa o Nome em vez do CPF
             let nomeAtual = document.getElementById('servidor-nome').textContent;
             if (nomeAtual === "SELECIONE NA LISTA ACIMA" || nomeAtual === "") { 
                 alert("⚠️ Selecione um servidor primeiro."); 
@@ -489,7 +505,6 @@
             let novoEstado = (estadoAtual + 1) % 3;
             linhaElemento.setAttribute('data-estado-individual', novoEstado);
 
-            // CORREÇÃO: A chave individual agora é atrelada ao Nome
             let chave = `ausencia_${nomeAtual}_${ano}_${mes}_${diaNumero}`;
 
             if (novoEstado === ESTADOS.NORMAL) {
@@ -517,8 +532,6 @@
             const mes = parseInt(selectMes.value);
             const nomeMes = selectMes.options[selectMes.selectedIndex].text;
             const ano = parseInt(document.getElementById('ano').value);
-            
-            // CORREÇÃO: Pega o nome do servidor atual para buscar as ausências dele
             const nomeAtual = document.getElementById('servidor-nome').textContent;
 
             document.getElementById('titulo-periodo').textContent = `Folha de Ponto - Período: ${nomeMes} ${ano}`;
@@ -541,7 +554,7 @@
                     tr.setAttribute('role', 'button');
 
                     let chaveGeral = `feriado_${ano}_${mes}_${dia}`;
-                    let chaveIndiv = `ausencia_${nomeAtual}_${ano}_${mes}_${dia}`; // Atualizado para usar o Nome
+                    let chaveIndiv = `ausencia_${nomeAtual}_${ano}_${mes}_${dia}`;
                     let dadosGeral = memoriaNuvem[chaveGeral];
                     let dadosIndiv = memoriaNuvem[chaveIndiv];
 
@@ -566,8 +579,18 @@
             }
         }
 
+        // 👇 NOVA LÓGICA DE IMPRESSÃO EM LOTE COM FILTRO DE SETOR 👇
         function imprimirTodosLote() {
             if (bancoServidores.length === 0) { alert("A lista de servidores está vazia!"); return; }
+
+            const filtroSetor = document.getElementById('filtro-setor').value;
+            
+            // Valida se existem servidores no setor escolhido antes de tentar imprimir
+            const servidoresFiltrados = bancoServidores.filter(s => filtroSetor === "TODOS" || (s.categoria || "H - OUTROS") === filtroSetor);
+            if (servidoresFiltrados.length === 0) {
+                alert("Nenhum servidor encontrado neste setor!");
+                return;
+            }
 
             mostrarCarregamento("🖨️ Preparando impressões em lote...");
             let indiceOriginal = document.getElementById('seletor-servidor').value;
@@ -576,13 +599,19 @@
             document.body.classList.add('modo-lote');
 
             for (let i = 0; i < bancoServidores.length; i++) {
-                document.getElementById('seletor-servidor').value = i;
-                preencherServidor();
-                let cloneArea = document.getElementById('folha-impressao').cloneNode(true);
-                cloneArea.removeAttribute('id');
-                cloneArea.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-                cloneArea.classList.add('quebra-pagina');
-                printWrapper.appendChild(cloneArea);
+                let servidor = bancoServidores[i];
+                let categoriaServidor = servidor.categoria || "H - OUTROS";
+                
+                // Apenas clona a página se o servidor pertencer ao setor escolhido no filtro
+                if (filtroSetor === "TODOS" || categoriaServidor === filtroSetor) {
+                    document.getElementById('seletor-servidor').value = i;
+                    preencherServidor();
+                    let cloneArea = document.getElementById('folha-impressao').cloneNode(true);
+                    cloneArea.removeAttribute('id');
+                    cloneArea.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+                    cloneArea.classList.add('quebra-pagina');
+                    printWrapper.appendChild(cloneArea);
+                }
             }
 
             setTimeout(() => { window.print(); esconderCarregamento(); }, 500);
