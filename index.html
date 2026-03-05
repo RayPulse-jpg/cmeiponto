@@ -177,7 +177,7 @@
             <div class="cabecalho-textos">
                 <h3>CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL MARIA JANDIRA DE SOUZA FONSECA</h3>
                 <p>Rua Maria Madalena – Centro – Cep: 48.415-000 | Fátima - Bahia</p>
-                <p>E-mail: mariajandira2015@hotmail.com | CNPJ: 24.755.198/0001-81</p>
+                <p>E-mail: [mariajandira2015@hotmail.com](mailto:mariajandira2015@hotmail.com) | CNPJ: 24.755.198/0001-81</p>
                 <h2 id="titulo-periodo">Folha de Ponto - Período: MARÇO 2026</h2>
             </div>
         </div>
@@ -217,12 +217,25 @@
     </div>
 
     <script>
-        // ----------------------------------------------------
-        // 1. CONEXÃO COM O FIREBASE
-        // ----------------------------------------------------
-        const pt1 = "AIzaSyCswoX"; const pt2 = "WBPacdMKfHKUBil"; const pt3 = "i4SwHUj7566L8";
+        // ========================================================
+        // CONSTANTES E CONFIGURAÇÕES
+        // ========================================================
+        const ROTULOS = {
+            faltaJustificada: "FALTA JUSTIFICADA",
+            atestadoMedico: "ATESTADO MÉDICO",
+            feriado: "FERIADO",
+            pontoFacultativo: "PONTO FACULTATIVO"
+        };
+
+        const ESTADOS = {
+            NORMAL: 0,
+            JUSTIFICADA: 1,
+            MEDICO: 2,
+            FACULTATIVO: 2
+        };
+
         const firebaseConfig = {
-            apiKey: pt1 + pt2 + pt3,
+            apiKey: "AIzaSyCswoXWBPacdMKfHKUBili4SwHUj7566L8",
             authDomain: "folha-de-ponto-cmei.firebaseapp.com",
             databaseURL: "https://folha-de-ponto-cmei-default-rtdb.firebaseio.com",
             projectId: "folha-de-ponto-cmei",
@@ -231,6 +244,7 @@
             appId: "1:363750832405:web:d0050043e6f2b4fde1111c",
             measurementId: "G-L5VZDVXHG6"
         };
+
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const auth = firebase.auth();
@@ -238,64 +252,128 @@
         let memoriaNuvem = {};
         let bancoServidores = [];
 
-        // ----------------------------------------------------
-        // 2. LÓGICA DE LOGIN 
-        // ----------------------------------------------------
+        // ========================================================
+        // UTILITÁRIOS
+        // ========================================================
+        function cpfBasicoValido(cpf) {
+            const cpfLimpo = cpf.replace(/[^\d]/g, '');
+            return cpfLimpo.length === 11;
+        }
+
+        function mostrarCarregamento(mensagem = "☁️ Conectando ao Banco de Dados CMEI...") {
+            const tela = document.getElementById('tela-carregamento');
+            tela.textContent = mensagem;
+            tela.style.display = 'flex';
+        }
+
+        function esconderCarregamento() {
+            document.getElementById('tela-carregamento').style.display = 'none';
+        }
+
+        // ========================================================
+        // 1. AUTENTICAÇÃO
+        // ========================================================
         auth.onAuthStateChanged((user) => {
             if (user) {
-                document.getElementById('tela-login').style.display = 'none';
-                document.getElementById('tela-carregamento').style.display = 'flex';
+                mostrarCarregamento();
                 carregarDadosDaNuvem();
             } else {
                 document.getElementById('tela-login').style.display = 'flex';
-                document.getElementById('tela-carregamento').style.display = 'none';
+                esconderCarregamento();
                 document.getElementById('corpo-tabela').innerHTML = '';
             }
         });
 
         function fazerLogin() {
-            const email = document.getElementById('login-email').value;
+            const email = document.getElementById('login-email').value.trim();
             const senha = document.getElementById('login-senha').value;
             const msgErro = document.getElementById('mensagem-erro');
-            if (!email || !senha) { msgErro.innerText = "Preencha o e-mail e a senha."; msgErro.style.display = 'block'; return; }
-            auth.signInWithEmailAndPassword(email, senha).then(() => { msgErro.style.display = 'none'; }).catch((error) => { msgErro.innerText = "E-mail ou senha incorretos!"; msgErro.style.display = 'block'; });
+            
+            if (!email || !senha) {
+                msgErro.textContent = "Preencha o e-mail e a senha.";
+                msgErro.style.display = 'block';
+                return;
+            }
+
+            auth.signInWithEmailAndPassword(email, senha)
+                .then(() => {
+                    msgErro.style.display = 'none';
+                })
+                .catch((error) => {
+                    let mensagem = "E-mail ou senha incorretos!";
+                    if (error.code === 'auth/too-many-requests') {
+                        mensagem = "Muitas tentativas. Tente novamente mais tarde.";
+                    } else if (error.code === 'auth/user-not-found') {
+                        mensagem = "Usuário não encontrado.";
+                    }
+                    msgErro.textContent = mensagem;
+                    msgErro.style.display = 'block';
+                });
         }
 
         function fazerLogout() {
-            auth.signOut().then(() => { memoriaNuvem = {}; bancoServidores = []; document.getElementById('login-senha').value = ''; });
+            auth.signOut().then(() => {
+                memoriaNuvem = {};
+                bancoServidores = [];
+                document.getElementById('login-senha').value = '';
+            });
         }
 
-        // ----------------------------------------------------
-        // 3. CARREGAMENTO DOS DADOS E ORDENAÇÃO
-        // ----------------------------------------------------
+        // ========================================================
+        // 2. GERENCIAMENTO DE DADOS FIREBASE
+        // ========================================================
         function carregarDadosDaNuvem() {
-            database.ref('cmei_dados').once('value').then((snapshot) => {
-                memoriaNuvem = snapshot.val() || {};
-                
-                if(memoriaNuvem['listaServidores']) {
-                    bancoServidores = JSON.parse(memoriaNuvem['listaServidores']);
-                    // Correção retroativa para funcionários antigos
-                    bancoServidores.forEach(s => { if(!s.categoria) s.categoria = "H - OUTROS"; });
-                } else {
-                    bancoServidores = [{ nome: "FERNANDA DE JESUS ALMEIDA", cpf: "049.131.865-07", cargo: "AUXILIAR DE COORDENAÇÃO", categoria: "A - DIREÇÃO E COORDENAÇÃO" }];
-                }
+            database.ref('cmei_dados').once('value')
+                .then((snapshot) => {
+                    memoriaNuvem = snapshot.val() || {};
+                    
+                    if (memoriaNuvem['listaServidores']) {
+                        bancoServidores = JSON.parse(memoriaNuvem['listaServidores']);
+                        bancoServidores.forEach(s => {
+                            if (!s.categoria) s.categoria = "H - OUTROS";
+                        });
+                    } else {
+                        bancoServidores = [{
+                            nome: "FERNANDA DE JESUS ALMEIDA",
+                            cpf: "049.131.865-07",
+                            cargo: "AUXILIAR DE COORDENAÇÃO",
+                            categoria: "A - DIREÇÃO E COORDENAÇÃO"
+                        }];
+                    }
 
-                document.getElementById('tela-carregamento').style.display = 'none'; 
-                carregarListaServidores(); 
-                carregarDadosEditaveis();
-                gerarFolha();
-            }).catch((erro) => { alert("Erro ao conectar no banco de dados."); });
+                    esconderCarregamento();
+                    carregarListaServidores();
+                    carregarDadosEditaveis();
+                    gerarFolha();
+                })
+                .catch(() => {
+                    alert("Erro ao conectar no banco de dados.");
+                    esconderCarregamento();
+                });
         }
 
-        function salvarNaNuvem(chave, valor) { memoriaNuvem[chave] = valor; database.ref('cmei_dados/' + chave).set(valor); }
-        function removerDaNuvem(chave) { delete memoriaNuvem[chave]; database.ref('cmei_dados/' + chave).remove(); }
-        function revelarBackup() { const painel = document.getElementById('painel-secreto'); painel.style.display = painel.style.display === 'none' ? 'flex' : 'none'; if(painel.style.display === 'flex') alert("🔓 Modo Administrador ativado!"); }
+        function salvarNaNuvem(chave, valor) {
+            memoriaNuvem[chave] = valor;
+            database.ref('cmei_dados/' + chave).set(valor);
+        }
 
-        // ----------------------------------------------------
-        // 4. SISTEMA DE SERVIDORES (AGORA COM CATEGORIAS)
-        // ----------------------------------------------------
+        function removerDaNuvem(chave) {
+            delete memoriaNuvem[chave];
+            database.ref('cmei_dados/' + chave).remove();
+        }
+
+        function revelarBackup() {
+            const painel = document.getElementById('painel-secreto');
+            painel.style.display = painel.style.display === 'none' ? 'flex' : 'none';
+            if (painel.style.display === 'flex') {
+                alert("🔓 Modo Administrador ativado!");
+            }
+        }
+
+        // ========================================================
+        // 3. GERENCIAMENTO DE SERVIDORES (MELHORADO)
+        // ========================================================
         function organizarEOrdenarServidores() {
-            // Ordena primeiro pela Categoria (A, B, C...) e depois alfabeticamente pelo Nome
             bancoServidores.sort((a, b) => {
                 let catA = a.categoria || "H - OUTROS";
                 let catB = b.categoria || "H - OUTROS";
@@ -307,20 +385,17 @@
 
         function carregarListaServidores() {
             const seletor = document.getElementById('seletor-servidor');
-            seletor.innerHTML = '<option value="">-- Selecione ou Digite Abaixo --</option>'; 
+            seletor.innerHTML = '<option value="">-- Selecione ou Digite Abaixo --</option>';
             
-            organizarEOrdenarServidores(); // Garante a ordem antes de mostrar na tela
+            organizarEOrdenarServidores();
 
             let categoriaAtual = "";
             let optGroupAtual = null;
 
             bancoServidores.forEach((servidor, index) => {
                 let cat = servidor.categoria || "H - OUTROS";
-                
-                // Limpa a letra de ordenação visualmente (ex: tira o "A - " de "A - DIREÇÃO")
-                let nomeCategoriaLimpo = cat.substring(4); 
+                let nomeCategoriaLimpo = cat.substring(4);
 
-                // Cria um divisor novo sempre que a categoria mudar
                 if (cat !== categoriaAtual) {
                     categoriaAtual = cat;
                     optGroupAtual = document.createElement('optgroup');
@@ -328,11 +403,15 @@
                     seletor.appendChild(optGroupAtual);
                 }
 
-                let opcao = document.createElement('option'); 
-                opcao.value = index; 
-                opcao.text = servidor.nome; 
+                let opcao = document.createElement('option');
+                opcao.value = index;
+                opcao.text = servidor.nome;
                 
-                if(optGroupAtual) { optGroupAtual.appendChild(opcao); } else { seletor.appendChild(opcao); }
+                if (optGroupAtual) {
+                    optGroupAtual.appendChild(opcao);
+                } else {
+                    seletor.appendChild(opcao);
+                }
             });
         }
 
@@ -340,128 +419,298 @@
             const index = document.getElementById('seletor-servidor').value;
             if (index !== "") {
                 const servidor = bancoServidores[index];
-                document.getElementById('servidor-nome').innerText = servidor.nome;
-                document.getElementById('servidor-cpf').innerText = servidor.cpf;
-                document.getElementById('servidor-cargo').innerText = servidor.cargo;
+                document.getElementById('servidor-nome').textContent = servidor.nome;
+                document.getElementById('servidor-cpf').textContent = servidor.cpf;
+                document.getElementById('servidor-cargo').textContent = servidor.cargo;
             } else {
-                document.getElementById('servidor-nome').innerText = "SELECIONE NA LISTA ACIMA";
-                document.getElementById('servidor-cpf').innerText = "000.000.000-00";
-                document.getElementById('servidor-cargo').innerText = "...";
+                document.getElementById('servidor-nome').textContent = "SELECIONE NA LISTA ACIMA";
+                document.getElementById('servidor-cpf').textContent = "000.000.000-00";
+                document.getElementById('servidor-cargo').textContent = "...";
             }
-            salvarDadosEditaveis(); gerarFolha(); 
+            salvarDadosEditaveis();
+            gerarFolha();
         }
 
-        function abrirModal() { document.getElementById('modalAdd').style.display = 'flex'; }
-        function fecharModal() { document.getElementById('modalAdd').style.display = 'none'; document.getElementById('novo-nome').value = ''; document.getElementById('novo-cpf').value = ''; document.getElementById('novo-cargo').value = ''; document.getElementById('novo-categoria').value = ''; }
+        function abrirModal() {
+            document.getElementById('modalAdd').style.display = 'flex';
+        }
+
+        function fecharModal() {
+            document.getElementById('modalAdd').style.display = 'none';
+            document.getElementById('novo-nome').value = '';
+            document.getElementById('novo-cpf').value = '';
+            document.getElementById('novo-cargo').value = '';
+            document.getElementById('novo-categoria').value = '';
+        }
 
         function salvarNovoServidor() {
-            let nome = document.getElementById('novo-nome').value.trim(); 
-            let cpf = document.getElementById('novo-cpf').value.trim(); 
+            let nome = document.getElementById('novo-nome').value.trim();
+            let cpf = document.getElementById('novo-cpf').value.trim();
             let cargo = document.getElementById('novo-cargo').value.trim();
             let categoria = document.getElementById('novo-categoria').value;
 
-            if(!nome || !cpf || !cargo || !categoria) { alert("Preencha todos os campos e selecione o Setor!"); return; }
-            if(bancoServidores.some(s => s.cpf === cpf || s.nome === nome)) { alert("❌ Erro: Já existe um servidor com este Nome ou CPF!"); return; }
+            if (!nome || !cpf || !cargo || !categoria) {
+                alert("Preencha todos os campos e selecione o Setor!");
+                return;
+            }
 
-            bancoServidores.push({ nome: nome, cpf: cpf, cargo: cargo, categoria: categoria });
+            if (!cpfBasicoValido(cpf)) {
+                alert("CPF inválido (deve conter 11 dígitos).");
+                return;
+            }
+
+            if (bancoServidores.some(s => s.cpf === cpf || s.nome === nome)) {
+                alert("❌ Erro: Já existe um servidor com este Nome ou CPF!");
+                return;
+            }
+
+            bancoServidores.push({ nome, cpf, cargo, categoria });
+            organizarEOrdenarServidores();
+            salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
             
-            organizarEOrdenarServidores(); // Reordena a lista com o novo membro
-            salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores)); 
-            
-            carregarListaServidores(); fecharModal(); 
-            
-            // Acha a nova posição do funcionário que acabou de ser adicionado
+            carregarListaServidores();
+            fecharModal();
+
             let novaPosicao = bancoServidores.findIndex(s => s.cpf === cpf);
-            document.getElementById('seletor-servidor').value = novaPosicao; 
+            document.getElementById('seletor-servidor').value = novaPosicao;
             preencherServidor();
         }
 
         function removerServidor() {
             const index = document.getElementById('seletor-servidor').value;
-            if (index === "") { alert("⚠️ Selecione um servidor na lista para remover."); return; }
-            if (confirm(`Remover ${bancoServidores[index].nome} permanentemente?`)) {
-                bancoServidores.splice(index, 1); 
-                salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores)); 
-                carregarListaServidores(); preencherServidor(); 
+            if (index === "") {
+                alert("⚠️ Selecione um servidor na lista para remover.");
+                return;
+            }
+            const servidor = bancoServidores[index];
+            if (confirm(`Remover ${servidor.nome} permanentemente?`)) {
+                bancoServidores.splice(index, 1);
+                salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
+                carregarListaServidores();
+                preencherServidor();
             }
         }
 
-        // ----------------------------------------------------
-        // 5. LÓGICA DE FERIADOS E FALTAS 
-        // ----------------------------------------------------
-        function salvarDadosEditaveis() { const campos = document.querySelectorAll('.editavel'); campos.forEach(campo => { if (campo.id) salvarNaNuvem(campo.id, campo.innerText); }); }
-        function carregarDadosEditaveis() { const campos = document.querySelectorAll('.editavel'); campos.forEach(campo => { if (campo.id && memoriaNuvem[campo.id]) { campo.innerText = memoriaNuvem[campo.id]; } campo.addEventListener('input', salvarDadosEditaveis); }); }
-        function salvarMotivo(chave, elemento) { let dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1, "motivo":""}'); dados.motivo = elemento.innerText; salvarNaNuvem(chave, JSON.stringify(dados)); }
+        // ========================================================
+        // 4. CAMPOS EDITÁVEIS (MELHORADO)
+        // ========================================================
+        function salvarDadosEditaveis() {
+            const campos = document.querySelectorAll('.editavel');
+            campos.forEach(campo => {
+                if (campo.id) {
+                    salvarNaNuvem(campo.id, campo.textContent);
+                }
+            });
+        }
+
+        function carregarDadosEditaveis() {
+            const campos = document.querySelectorAll('.editavel');
+            campos.forEach(campo => {
+                if (campo.id && memoriaNuvem[campo.id]) {
+                    campo.textContent = memoriaNuvem[campo.id];
+                }
+                campo.addEventListener('input', salvarDadosEditaveis);
+            });
+        }
+
+        function salvarMotivo(chave, elemento) {
+            let dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1, "motivo":""}');
+            dados.motivo = elemento.textContent;
+            salvarNaNuvem(chave, JSON.stringify(dados));
+        }
+
+        // ========================================================
+        // 5. LÓGICA DE FERIADOS E FALTAS (REFATORADA)
+        // ========================================================
+        function obterConteudoLinha(estado, tipo, motivo = "", diaNumero) {
+            const rotulo = tipo === 'geral' ? 
+                (estado === ESTADOS.JUSTIFICADA ? ROTULOS.feriado : ROTULOS.pontoFacultativo) :
+                (estado === ESTADOS.JUSTIFICADA ? ROTULOS.faltaJustificada : ROTULOS.atestadoMedico);
+            
+            const classe = tipo === 'geral' ? 'fim-de-semana' : 'linha-individual';
+            
+            return `<td>${diaNumero}</td><td colspan="5" class="${classe}">${rotulo} <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${tipo}_${diaNumero}', this)">${motivo}</span></td>`;
+        }
 
         function alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero) {
-            let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-geral') || '0'); let novoEstado = (estadoAtual + 1) % 3;
-            linhaElemento.setAttribute('data-estado-geral', novoEstado); linhaElemento.setAttribute('data-estado-individual', '0');
-            let chave = `feriado_${ano}_${mes}_${diaNumero}`; let cpf = document.getElementById('servidor-cpf').innerText; removerDaNuvem(`ausencia_${cpf}_${ano}_${mes}_${diaNumero}`); 
+            let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-geral') || '0');
+            let novoEstado = (estadoAtual + 1) % 3;
+            linhaElemento.setAttribute('data-estado-geral', novoEstado);
+            linhaElemento.setAttribute('data-estado-individual', '0');
+            
+            let chave = `feriado_${ano}_${mes}_${diaNumero}`;
+            let cpf = document.getElementById('servidor-cpf').textContent;
+            removerDaNuvem(`ausencia_${cpf}_${ano}_${mes}_${diaNumero}`);
 
-            if (novoEstado === 0) { linhaElemento.innerHTML = `<td>${diaNumero}</td><td></td><td></td><td></td><td></td><td></td>`; removerDaNuvem(chave); } 
-            else if (novoEstado === 1) { linhaElemento.innerHTML = `<td>${diaNumero}</td><td colspan="5" class="fim-de-semana">FERIADO <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)"></span></td>`; salvarNaNuvem(chave, JSON.stringify({ estado: 1, motivo: "" })); } 
-            else if (novoEstado === 2) { linhaElemento.innerHTML = `<td>${diaNumero}</td><td colspan="5" class="fim-de-semana">PONTO FACULTATIVO <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)"></span></td>`; salvarNaNuvem(chave, JSON.stringify({ estado: 2, motivo: "" })); }
+            if (novoEstado === ESTADOS.NORMAL) {
+                linhaElemento.innerHTML = `<td>${diaNumero}</td><td></td><td></td><td></td><td></td><td></td>`;
+                removerDaNuvem(chave);
+            } else {
+                let dados = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : { estado: novoEstado, motivo: "" };
+                linhaElemento.innerHTML = obterConteudoLinha(novoEstado, 'geral', dados.motivo, diaNumero);
+                salvarNaNuvem(chave, JSON.stringify(dados));
+            }
         }
 
         function alternarAusenciaIndividual(linhaElemento, ano, mes, diaNumero, evento) {
-            evento.preventDefault(); let cpf = document.getElementById('servidor-cpf').innerText; if(cpf === "000.000.000-00" || cpf === "") { alert("⚠️ Selecione um servidor primeiro."); return; }
-            let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-individual') || '0'); let novoEstado = (estadoAtual + 1) % 3; linhaElemento.setAttribute('data-estado-individual', novoEstado);
+            evento.preventDefault();
+            let cpf = document.getElementById('servidor-cpf').textContent;
+            if (cpf === "000.000.000-00" || cpf === "") {
+                alert("⚠️ Selecione um servidor primeiro.");
+                return;
+            }
+
+            let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-individual') || '0');
+            let novoEstado = (estadoAtual + 1) % 3;
+            linhaElemento.setAttribute('data-estado-individual', novoEstado);
+            
             let chave = `ausencia_${cpf}_${ano}_${mes}_${diaNumero}`;
 
-            if (novoEstado === 0) {
+            if (novoEstado === ESTADOS.NORMAL) {
+                // Volta ao estado normal ou aplica feriado geral se existir
                 let temFeriadoGeral = memoriaNuvem[`feriado_${ano}_${mes}_${diaNumero}`];
-                if(temFeriadoGeral) { linhaElemento.setAttribute('data-estado-geral', '0'); alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero); alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero); } else { linhaElemento.innerHTML = `<td>${diaNumero}</td><td></td><td></td><td></td><td></td><td></td>`; } removerDaNuvem(chave);
-            } else if (novoEstado === 1) { linhaElemento.innerHTML = `<td>${diaNumero}</td><td colspan="5" class="linha-individual">FALTA JUSTIFICADA <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)"></span></td>`; salvarNaNuvem(chave, JSON.stringify({ estado: 1, motivo: "" })); } 
-            else if (novoEstado === 2) { linhaElemento.innerHTML = `<td>${diaNumero}</td><td colspan="5" class="linha-individual">ATESTADO MÉDICO <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chave}', this)"></span></td>`; salvarNaNuvem(chave, JSON.stringify({ estado: 2, motivo: "" })); }
+                if (temFeriadoGeral) {
+                    let dadosGeral = JSON.parse(temFeriadoGeral);
+                    linhaElemento.innerHTML = obterConteudoLinha(dadosGeral.estado, 'geral', dadosGeral.motivo, diaNumero);
+                    linhaElemento.setAttribute('data-estado-geral', dadosGeral.estado);
+                } else {
+                    linhaElemento.innerHTML = `<td>${diaNumero}</td><td></td><td></td><td></td><td></td><td></td>`;
+                    linhaElemento.setAttribute('data-estado-geral', '0');
+                }
+                removerDaNuvem(chave);
+            } else {
+                let dados = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : { estado: novoEstado, motivo: "" };
+                linhaElemento.innerHTML = obterConteudoLinha(novoEstado, 'individual', dados.motivo, diaNumero);
+                salvarNaNuvem(chave, JSON.stringify(dados));
+            }
         }
 
         function gerarFolha() {
-            const selectMes = document.getElementById('mes'); const mes = parseInt(selectMes.value); const nomeMes = selectMes.options[selectMes.selectedIndex].text; const ano = parseInt(document.getElementById('ano').value); const cpfAtual = document.getElementById('servidor-cpf').innerText;
-            document.getElementById('titulo-periodo').innerText = `Folha de Ponto - Período: ${nomeMes} ${ano}`;
-            const corpoTabela = document.getElementById('corpo-tabela'); corpoTabela.innerHTML = ''; const diasNoMes = new Date(ano, mes, 0).getDate();
+            const selectMes = document.getElementById('mes');
+            const mes = parseInt(selectMes.value);
+            const nomeMes = selectMes.options[selectMes.selectedIndex].text;
+            const ano = parseInt(document.getElementById('ano').value);
+            const cpfAtual = document.getElementById('servidor-cpf').textContent;
+            
+            document.getElementById('titulo-periodo').textContent = `Folha de Ponto - Período: ${nomeMes} ${ano}`;
+            
+            const corpoTabela = document.getElementById('corpo-tabela');
+            corpoTabela.innerHTML = '';
+            const diasNoMes = new Date(ano, mes, 0).getDate();
 
             for (let dia = 1; dia <= diasNoMes; dia++) {
-                const data = new Date(ano, mes - 1, dia); const diaDaSemana = data.getDay(); const tr = document.createElement('tr');
-                if (diaDaSemana === 0) { tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">DOMINGO</td>`; } else if (diaDaSemana === 6) { tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">SÁBADO</td>`; } else { 
+                const data = new Date(ano, mes - 1, dia);
+                const diaDaSemana = data.getDay();
+                const tr = document.createElement('tr');
+
+                if (diaDaSemana === 0) {
+                    tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">DOMINGO</td>`;
+                } else if (diaDaSemana === 6) {
+                    tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">SÁBADO</td>`;
+                } else {
                     tr.className = "dia-util";
-                    let chaveGeral = `feriado_${ano}_${mes}_${dia}`; let dadosGeral = memoriaNuvem[chaveGeral];
-                    let chaveIndiv = `ausencia_${cpfAtual}_${ano}_${mes}_${dia}`; let dadosIndiv = memoriaNuvem[chaveIndiv];
+                    tr.setAttribute('tabindex', '0');
+                    tr.setAttribute('role', 'button');
+                    
+                    let chaveGeral = `feriado_${ano}_${mes}_${dia}`;
+                    let dadosGeral = memoriaNuvem[chaveGeral];
+                    let chaveIndiv = `ausencia_${cpfAtual}_${ano}_${mes}_${dia}`;
+                    let dadosIndiv = memoriaNuvem[chaveIndiv];
 
                     if (dadosIndiv) {
-                        let info = JSON.parse(dadosIndiv); tr.setAttribute('data-estado-individual', info.estado); let texto = info.estado === 1 ? "FALTA JUSTIFICADA" : "ATESTADO MÉDICO";
-                        tr.innerHTML = `<td>${dia}</td><td colspan="5" class="linha-individual">${texto} <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chaveIndiv}', this)">${info.motivo}</span></td>`;
+                        let info = JSON.parse(dadosIndiv);
+                        tr.setAttribute('data-estado-individual', info.estado);
+                        tr.innerHTML = obterConteudoLinha(info.estado, 'individual', info.motivo, dia);
                     } else if (dadosGeral) {
-                        let info = JSON.parse(dadosGeral); tr.setAttribute('data-estado-geral', info.estado); let texto = info.estado === 1 ? "FERIADO" : "PONTO FACULTATIVO";
-                        tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">${texto} <span class="motivo-feriado" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo('${chaveGeral}', this)">${info.motivo}</span></td>`;
+                        let info = JSON.parse(dadosGeral);
+                        tr.setAttribute('data-estado-geral', info.estado);
+                        tr.innerHTML = obterConteudoLinha(info.estado, 'geral', info.motivo, dia);
                     } else {
-                        tr.setAttribute('data-estado-geral', '0'); tr.setAttribute('data-estado-individual', '0'); tr.innerHTML = `<td>${dia}</td><td></td><td></td><td></td><td></td><td></td>`;
+                        tr.setAttribute('data-estado-geral', '0');
+                        tr.setAttribute('data-estado-individual', '0');
+                        tr.innerHTML = `<td>${dia}</td><td></td><td></td><td></td><td></td><td></td>`;
                     }
-                    tr.onclick = function() { alternarFeriadoGeral(this, ano, mes, dia); }; tr.oncontextmenu = function(evento) { alternarAusenciaIndividual(this, ano, mes, dia, evento); };
-                } corpoTabela.appendChild(tr);
+                    
+                    tr.onclick = function() { alternarFeriadoGeral(this, ano, mes, dia); };
+                    tr.oncontextmenu = function(evento) { alternarAusenciaIndividual(this, ano, mes, dia, evento); };
+                }
+                corpoTabela.appendChild(tr);
             }
         }
 
-        // ----------------------------------------------------
-        // 6. IMPRESSÃO EM LOTE E BACKUP
-        // ----------------------------------------------------
+        // ========================================================
+        // 6. IMPRESSÃO E BACKUP
+        // ========================================================
         function imprimirTodosLote() {
-            if(bancoServidores.length === 0) { alert("A lista de servidores está vazia!"); return; }
+            if (bancoServidores.length === 0) {
+                alert("A lista de servidores está vazia!");
+                return;
+            }
+
+            mostrarCarregamento("🖨️ Preparando impressões em lote...");
             let indiceOriginal = document.getElementById('seletor-servidor').value;
-            const printWrapper = document.getElementById('print-wrapper'); printWrapper.innerHTML = ''; 
+            const printWrapper = document.getElementById('print-wrapper');
+            printWrapper.innerHTML = '';
             document.body.classList.add('modo-lote');
 
-            for(let i = 0; i < bancoServidores.length; i++) {
-                document.getElementById('seletor-servidor').value = i; preencherServidor(); 
+            const clones = [];
+            for (let i = 0; i < bancoServidores.length; i++) {
+                document.getElementById('seletor-servidor').value = i;
+                preencherServidor();
+                
                 let cloneArea = document.getElementById('folha-impressao').cloneNode(true);
-                cloneArea.removeAttribute('id'); cloneArea.classList.add('quebra-pagina'); printWrapper.appendChild(cloneArea);
+                cloneArea.removeAttribute('id');
+                // Remove IDs duplicados para evitar conflitos
+                cloneArea.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+                cloneArea.classList.add('quebra-pagina');
+                printWrapper.appendChild(cloneArea);
+                clones.push(cloneArea);
             }
-            setTimeout(() => { window.print(); }, 300);
 
-            window.onafterprint = function() { document.body.classList.remove('modo-lote'); printWrapper.innerHTML = ''; document.getElementById('seletor-servidor').value = indiceOriginal !== "" ? indiceOriginal : ""; preencherServidor(); window.onafterprint = null; };
+            setTimeout(() => {
+                window.print();
+                esconderCarregamento();
+            }, 500);
+
+            window.onafterprint = function() {
+                document.body.classList.remove('modo-lote');
+                printWrapper.innerHTML = '';
+                document.getElementById('seletor-servidor').value = indiceOriginal !== "" ? indiceOriginal : "";
+                preencherServidor();
+                gerarFolha();
+                window.onafterprint = null;
+            };
         }
 
-        function exportarBackup() { let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(memoriaNuvem)); let link = document.createElement("a"); link.setAttribute("href", dataStr); link.setAttribute("download", "backup_escola_pontos.json"); document.body.appendChild(link); link.click(); link.remove(); }
-        function importarBackup(evento) { let ficheiro = evento.target.files[0]; if (!ficheiro) return; let leitor = new FileReader(); leitor.onload = function(e) { try { let dados = JSON.parse(e.target.result); database.ref('cmei_dados').set(dados).then(() => { alert("✅ Backup restaurado!"); location.reload(); }); } catch(err) { alert("❌ Arquivo inválido!"); } }; leitor.readAsText(ficheiro); evento.target.value = ""; }
+        function exportarBackup() {
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(memoriaNuvem));
+            let link = document.createElement("a");
+            link.setAttribute("href", dataStr);
+            link.setAttribute("download", "backup_escola_pontos.json");
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        }
+
+        function importarBackup(evento) {
+            let ficheiro = evento.target.files[0];
+            if (!ficheiro) return;
+            
+            let leitor = new FileReader();
+            leitor.onload = function(e) {
+                try {
+                    let dados = JSON.parse(e.target.result);
+                    database.ref('cmei_dados').set(dados).then(() => {
+                        alert("✅ Backup restaurado!");
+                        location.reload();
+                    });
+                } catch(err) {
+                    alert("❌ Arquivo inválido!");
+                }
+            };
+            leitor.readAsText(ficheiro);
+            evento.target.value = "";
+        }
     </script>
 </body>
 </html>
