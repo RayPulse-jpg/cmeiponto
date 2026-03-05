@@ -69,20 +69,30 @@
         optgroup { font-weight: bold; color: #2B6CB0; background: #f7fafc; }
         option { color: #333; background: #fff; font-weight: normal; }
         
+        /* 👇 CORREÇÃO: MATEMÁTICA DA IMPRESSÃO PARA CABER EM 1 FOLHA 👇 */
         @media print {
             body { background-color: #fff; padding: 0; margin: 0; } 
-            @page { margin: 0.8cm; } 
+            @page { margin: 0.6cm; } /* Margens reduzidas para ganhar espaço útil */
             .controles, .controles-avancados, .aviso-clique, .modal-overlay, #tela-carregamento, #tela-login { display: none !important; }
             .editavel { background-color: transparent; border: none; padding: 0; } .dia-util { cursor: default; } .motivo-feriado { border: none; } .motivo-feriado:empty:before { content: ""; }
             body.modo-lote #folha-impressao { display: none !important; } body.modo-lote #print-wrapper { display: block !important; }
             body:not(.modo-lote) #folha-impressao { display: block !important; box-shadow: none; padding: 0; border: none; } body:not(.modo-lote) #print-wrapper { display: none !important; }
             
-            .tabela-ponto td { height: 23px !important; } 
-            .tabela-info, .tabela-ponto { margin-bottom: 8px !important; }
-            .cabecalho-container { margin-bottom: 5px !important; min-height: 70px !important; }
-            .cabecalho-logo img { max-height: 70px !important; }
-            .assinaturas-rodape { margin-top: 20px !important; }
-            .cabecalho-textos h2 { margin-top: 5px !important; }
+            /* Altura mágica calculada para a folha A4 (31 linhas cabem perfeitamente) */
+            .tabela-ponto td { height: 22px !important; padding: 0px 4px !important; font-size: 12px !important; } 
+            .tabela-ponto th { padding: 2px !important; font-size: 11px !important; }
+            .tabela-info td { padding: 4px !important; font-size: 12px !important; }
+            .tabela-info, .tabela-ponto { margin-bottom: 5px !important; }
+            
+            /* Encolhe o cabeçalho e os textos só na impressora */
+            .cabecalho-container { margin-bottom: 5px !important; min-height: 60px !important; }
+            .cabecalho-logo img { max-height: 60px !important; }
+            .cabecalho-textos h3 { font-size: 12px !important; margin: 0 !important;}
+            .cabecalho-textos p { font-size: 10px !important; margin: 1px 0 !important; }
+            .cabecalho-textos h2 { font-size: 14px !important; margin-top: 5px !important; margin-bottom: 5px !important;}
+            .assinaturas-rodape { margin-top: 15px !important; }
+            
+            .quebra-pagina { page-break-after: always; page-break-inside: avoid; margin-bottom: 0; }
         }
     </style>
 </head>
@@ -188,7 +198,7 @@
         <table class="tabela-info">
             <tr>
                 <td colspan="2">SERVIDOR(A): <span id="servidor-nome" class="editavel" contenteditable="true" spellcheck="false">SELECIONE NA LISTA ACIMA</span></td>
-                <td>CPF: <span id="servidor-cpf" class="editavel" contenteditable="true" spellcheck="false">000.000.000-00</span></td>
+                <td>CPF: <span id="servidor-cpf" class="editavel" contenteditable="true" spellcheck="false" oninput="mascaraCPF(this)">000.000.000-00</span></td>
             </tr>
             <tr>
                 <td colspan="3">CARGO/FUNÇÃO: <span id="servidor-cargo" class="editavel" contenteditable="true" spellcheck="false">...</span></td>
@@ -252,12 +262,15 @@
         let bancoServidores = [];
 
         function mascaraCPF(campo) {
-            let cpf = campo.value;
+            let cpf = campo.value || campo.textContent; // Funciona para inputs e spans
             cpf = cpf.replace(/\D/g, ""); 
             cpf = cpf.replace(/(\d{3})(\d)/, "$1.$2"); 
             cpf = cpf.replace(/(\d{3})(\d)/, "$1.$2"); 
             cpf = cpf.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); 
-            campo.value = cpf;
+            
+            // Retorna o valor formatado para o campo correto
+            if(campo.value !== undefined) campo.value = cpf;
+            else if(campo.textContent !== undefined) campo.textContent = cpf;
         }
 
         function cpfBasicoValido(cpf) {
@@ -333,7 +346,7 @@
                     }
                     esconderCarregamento();
                     carregarListaServidores();
-                    carregarDadosEditaveis();
+                    carregarDadosEditaveis(); // Ativa as novas regras de edição na folha
                     gerarFolha();
                 })
                 .catch(() => { alert("Erro ao conectar no banco de dados."); esconderCarregamento(); });
@@ -401,7 +414,6 @@
                 document.getElementById('servidor-cpf').textContent = "000.000.000-00";
                 document.getElementById('servidor-cargo').textContent = "...";
             }
-            salvarDadosEditaveis();
             gerarFolha();
         }
 
@@ -445,17 +457,33 @@
             }
         }
 
-        function salvarDadosEditaveis() {
-            document.querySelectorAll('.editavel').forEach(campo => {
-                if (campo.id) salvarNaNuvem(campo.id, campo.textContent);
-            });
+        // 👇 CORREÇÃO: ATUALIZA O BANCO DE DADOS QUANDO VOCÊ EDITA DIRETO NA FOLHA 👇
+        function atualizarServidorEditado() {
+            const index = document.getElementById('seletor-servidor').value;
+            if (index === "") return;
+
+            let novoNome = document.getElementById('servidor-nome').textContent.trim().toUpperCase();
+            let novoCpf = document.getElementById('servidor-cpf').textContent.trim();
+            let novoCargo = document.getElementById('servidor-cargo').textContent.trim().toUpperCase();
+            let alterou = false;
+
+            if (bancoServidores[index].nome !== novoNome) { bancoServidores[index].nome = novoNome; alterou = true; }
+            if (bancoServidores[index].cpf !== novoCpf) { bancoServidores[index].cpf = novoCpf; alterou = true; }
+            if (bancoServidores[index].cargo !== novoCargo) { bancoServidores[index].cargo = novoCargo; alterou = true; }
+
+            if (alterou) {
+                salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
+                let valorAtual = index;
+                carregarListaServidores();
+                document.getElementById('seletor-servidor').value = valorAtual;
+            }
         }
 
+        // Configura para salvar na nuvem apenas quando você clica fora da caixa de edição
         function carregarDadosEditaveis() {
-            document.querySelectorAll('.editavel').forEach(campo => {
-                if (campo.id && memoriaNuvem[campo.id]) campo.textContent = memoriaNuvem[campo.id];
-                campo.addEventListener('input', salvarDadosEditaveis);
-            });
+            document.getElementById('servidor-nome').addEventListener('blur', atualizarServidorEditado);
+            document.getElementById('servidor-cpf').addEventListener('blur', atualizarServidorEditado);
+            document.getElementById('servidor-cargo').addEventListener('blur', atualizarServidorEditado);
         }
 
         function salvarMotivo(chave, elemento) {
@@ -579,18 +607,12 @@
             }
         }
 
-        // 👇 NOVA LÓGICA DE IMPRESSÃO EM LOTE COM FILTRO DE SETOR 👇
         function imprimirTodosLote() {
             if (bancoServidores.length === 0) { alert("A lista de servidores está vazia!"); return; }
 
             const filtroSetor = document.getElementById('filtro-setor').value;
-            
-            // Valida se existem servidores no setor escolhido antes de tentar imprimir
             const servidoresFiltrados = bancoServidores.filter(s => filtroSetor === "TODOS" || (s.categoria || "H - OUTROS") === filtroSetor);
-            if (servidoresFiltrados.length === 0) {
-                alert("Nenhum servidor encontrado neste setor!");
-                return;
-            }
+            if (servidoresFiltrados.length === 0) { alert("Nenhum servidor encontrado neste setor!"); return; }
 
             mostrarCarregamento("🖨️ Preparando impressões em lote...");
             let indiceOriginal = document.getElementById('seletor-servidor').value;
@@ -602,7 +624,6 @@
                 let servidor = bancoServidores[i];
                 let categoriaServidor = servidor.categoria || "H - OUTROS";
                 
-                // Apenas clona a página se o servidor pertencer ao setor escolhido no filtro
                 if (filtroSetor === "TODOS" || categoriaServidor === filtroSetor) {
                     document.getElementById('seletor-servidor').value = i;
                     preencherServidor();
