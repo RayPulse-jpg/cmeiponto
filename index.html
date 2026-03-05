@@ -177,17 +177,13 @@
     </div>
 
     <script>
-        // ----------------------------------------------------
-        // 1. CONEXÃO COM O FIREBASE E OFUSCAÇÃO DA CHAVE
-        // ----------------------------------------------------
-        
-        // Quebramos a chave em 3 partes para o robô do GitHub não acusar o alerta
         const pt1 = "AIzaSyCswoX";
         const pt2 = "WBPacdMKfHKUBil";
         const pt3 = "i4SwHUj7566L8";
 
         const firebaseConfig = {
-            apiKey: pt1 + pt2 + pt3, // O navegador junta as 3 partes na hora de rodar
+            apiKey: pt1 + pt2 + pt3, 
+            databaseURL: "https://folha-de-ponto-cmei-default-rtdb.firebaseio.com",
             authDomain: "folha-de-ponto-cmei.firebaseapp.com",
             projectId: "folha-de-ponto-cmei",
             storageBucket: "folha-de-ponto-cmei.firebasestorage.app",
@@ -454,3 +450,4 @@
     </script>
 </body>
 </html>
+
