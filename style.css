@@ -589,7 +589,7 @@
 
             /* ESPAÇO EXTRA: Empurra a assinatura para baixo para não grudar na tabela */
             .assinaturas-rodape {
-                margin-top: 40px !important;
+                margin-top: 30px !important;
                 margin-bottom: 10px !important;
             }
 
@@ -610,3 +610,4 @@
             }
 
         }
+
