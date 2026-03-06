@@ -53,21 +53,37 @@ function cpfBasicoValido(cpf) { return cpf.replace(/[^\d]/g, '').length === 11; 
 
 function mostrarCarregamento(mensagem = "☁️ Conectando ao Banco de Dados CMEI...") {
     const tela = document.getElementById('tela-carregamento');
-    tela.textContent = mensagem;
-    tela.style.display = 'flex';
+    if (tela) {
+        tela.textContent = mensagem;
+        tela.style.display = 'flex';
+    }
 }
 
-function esconderCarregamento() { document.getElementById('tela-carregamento').style.display = 'none'; }
+function esconderCarregamento() {
+    const tela = document.getElementById('tela-carregamento');
+    if (tela) tela.style.display = 'none';
+}
+
+const isLoginPage = window.location.pathname.includes('login.html');
 
 auth.onAuthStateChanged((user) => {
     if (user) {
-        document.getElementById('tela-login').style.display = 'none';
-        mostrarCarregamento();
-        carregarDadosDaNuvem();
+        if (isLoginPage) {
+            window.location.href = 'index.html';
+        } else {
+            const telaLogin = document.getElementById('tela-login');
+            if (telaLogin) telaLogin.style.display = 'none';
+            mostrarCarregamento();
+            carregarDadosDaNuvem();
+        }
     } else {
-        document.getElementById('tela-login').style.display = 'flex';
-        esconderCarregamento();
-        document.getElementById('corpo-tabela').innerHTML = '';
+        if (!isLoginPage) {
+            window.location.href = 'login.html';
+        } else {
+            const telaLogin = document.getElementById('tela-login');
+            if (telaLogin) telaLogin.style.display = 'flex';
+            esconderCarregamento();
+        }
     }
 });
 
@@ -91,7 +107,12 @@ function fazerLogin() {
 }
 
 function fazerLogout() {
-    auth.signOut().then(() => { memoriaNuvem = {}; bancoServidores = []; document.getElementById('login-senha').value = ''; });
+    auth.signOut().then(() => {
+        memoriaNuvem = {};
+        bancoServidores = [];
+        const inputSenha = document.getElementById('login-senha');
+        if (inputSenha) inputSenha.value = '';
+    });
 }
 
 function carregarDadosDaNuvem() {
