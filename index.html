@@ -15,20 +15,8 @@
 
 <body>
 
-    <div id="tela-login">
-        <div class="login-box">
-            <h2>CMEI Maria Jandira</h2>
-            <p>Acesso Restrito à Secretaria</p>
-            <input type="email" id="login-email" placeholder="E-mail de acesso"
-                onkeypress="if(event.key === 'Enter') fazerLogin()">
-            <input type="password" id="login-senha" placeholder="Senha"
-                onkeypress="if(event.key === 'Enter') fazerLogin()">
-            <button onclick="fazerLogin()">Entrar no Sistema</button>
-            <div id="mensagem-erro">Usuário ou senha incorretos.</div>
-        </div>
-    </div>
 
-    <div id="tela-carregamento">☁️ Conectando ao Banco de Dados CMEI...</div>
+    <div id="tela-carregamento" style="display: flex;">☁️ Verificando acesso...</div>
 
     <div class="controles">
         <label for="seletor-servidor">Servidor:</label>
