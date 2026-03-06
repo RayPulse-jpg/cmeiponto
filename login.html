@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Gerador de Folha de Ponto CMEI</title>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="tela-login" style="display: none;">
+        <div class="login-box">
+            <h2>CMEI Maria Jandira</h2>
+            <p>Acesso Restrito à Secretaria</p>
+            <input type="email" id="login-email" placeholder="E-mail de acesso"
+                onkeypress="if(event.key === 'Enter') fazerLogin()">
+            <input type="password" id="login-senha" placeholder="Senha"
+                onkeypress="if(event.key === 'Enter') fazerLogin()">
+            <button onclick="fazerLogin()">Entrar no Sistema</button>
+            <div id="mensagem-erro">Usuário ou senha incorretos.</div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
