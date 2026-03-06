@@ -1,0 +1,611 @@
+        /* Estilos Gerais */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .controles,
+        .controles-avancados {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 950px;
+            box-sizing: border-box;
+        }
+
+        .grupo-seletor {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        select,
+        button,
+        input {
+            padding: 8px 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        select {
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        select:hover {
+            border-color: #3182CE;
+        }
+
+        button {
+            background-color: #4A5568;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .btn-imprimir {
+            background-color: #3182CE;
+        }
+
+        .btn-imprimir:hover {
+            background-color: #2B6CB0;
+        }
+
+        .btn-lote {
+            background-color: #dd6b20;
+        }
+
+        .btn-lote:hover {
+            background-color: #c05621;
+        }
+
+        .btn-add {
+            background-color: #38a169;
+            padding: 8px 10px;
+        }
+
+        .btn-add:hover {
+            background-color: #2f855a;
+        }
+
+        .btn-del {
+            background-color: #e53e3e;
+            padding: 8px 10px;
+        }
+
+        .btn-del:hover {
+            background-color: #c53030;
+        }
+
+        .btn-backup {
+            background-color: #4a5568;
+        }
+
+        .btn-backup:hover {
+            background-color: #2d3748;
+        }
+
+        .btn-excel {
+            background-color: #38a169;
+        }
+
+        .btn-excel:hover {
+            background-color: #2f855a;
+        }
+
+        .btn-sair {
+            background-color: #e53e3e;
+            padding: 8px 15px;
+            margin-left: 5px;
+        }
+
+        .btn-sair:hover {
+            background-color: #c53030;
+        }
+
+        .folha-container {
+            background-color: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            box-sizing: border-box;
+        }
+
+        .cabecalho-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 15px;
+            min-height: 80px;
+        }
+
+        .cabecalho-logo {
+            position: absolute;
+            left: 0;
+            top: 0;
+            cursor: pointer;
+            min-width: 80px;
+            min-height: 80px;
+        }
+
+        .cabecalho-logo img {
+            max-width: 80px;
+            max-height: 80px;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .cabecalho-textos {
+            text-align: center;
+            width: 100%;
+            padding: 0 90px;
+            box-sizing: border-box;
+        }
+
+        .cabecalho-textos h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .cabecalho-textos p {
+            margin: 2px 0;
+            font-size: 12px;
+        }
+
+        .cabecalho-textos h2 {
+            margin: 15px 0 0 0;
+            font-size: 16px;
+        }
+
+        .aviso-clique {
+            text-align: center;
+            font-size: 12px;
+            color: #e53e3e;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .tabela-info,
+        .tabela-ponto {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .tabela-info td,
+        .tabela-ponto th,
+        .tabela-ponto td {
+            border: 1px solid #000;
+            padding: 4px 6px;
+        }
+
+        .tabela-info td {
+            font-weight: bold;
+            padding: 8px;
+        }
+
+        .tabela-ponto th {
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 8px 4px;
+        }
+
+        .tabela-ponto td {
+            text-align: center;
+            height: 32px;
+        }
+
+        /* 👇 GARANTIA DE CENTRALIZAÇÃO PARA FERIADOS 👇 */
+        .fim-de-semana {
+            background-color: #e2e8f0;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-align: center !important;
+        }
+
+        .linha-individual {
+            background-color: #fefcbf;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #744210;
+            text-align: center !important;
+        }
+
+        .dia-util {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .dia-util:hover {
+            background-color: #edf2f7;
+        }
+
+        .editavel {
+            background-color: #fffae6;
+            border-bottom: 1px dashed #ccc;
+            cursor: text;
+            padding: 1px 3px;
+            border-radius: 2px;
+            display: inline-block;
+            min-width: 50px;
+        }
+
+        .editavel:focus {
+            background-color: #fff;
+            outline: 2px solid #3182CE;
+            border-bottom: none;
+        }
+
+        /* 👇 ALINHAMENTO CENTRALIZADO DOS RÓTULOS 👇 */
+        .rotulo-editavel {
+            cursor: text;
+            border-bottom: 1px dashed #999;
+            display: inline-block;
+            min-width: 60px;
+            padding: 0 4px;
+            text-align: center;
+        }
+
+        .motivo-feriado {
+            background-color: transparent;
+            border-bottom: 1px dashed #999;
+            cursor: text;
+            padding: 0 5px;
+            outline: none;
+            font-family: inherit;
+            text-transform: uppercase;
+            display: inline-block;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .motivo-feriado:empty:before {
+            content: " - CLIQUE PARA DESCREVER";
+            color: #718096;
+            font-style: italic;
+            font-weight: normal;
+            text-transform: none;
+        }
+
+        .assinaturas-rodape {
+            margin-top: 35px;
+            display: flex;
+            justify-content: center;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .bloco-assinatura {
+            width: 50%;
+        }
+
+        .linha-assinatura {
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .linha-assinatura span {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .cargo-assinatura {
+            font-weight: normal;
+            font-size: 11px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            width: 340px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content h3 {
+            margin: 0 0 10px 0;
+            color: #2d3748;
+            text-align: center;
+        }
+
+        .modal-botoes {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .modal-botoes button {
+            flex: 1;
+            padding: 10px;
+        }
+
+        .btn-cancelar {
+            background-color: #e53e3e;
+        }
+
+        .btn-cancelar:hover {
+            background-color: #c53030;
+        }
+
+        #tela-carregamento {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f4f4f9;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            font-size: 20px;
+            font-weight: bold;
+            color: #3182CE;
+        }
+
+        #tela-login {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #2d3748;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 10px;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        .login-box h2 {
+            margin: 0 0 5px 0;
+            color: #1a202c;
+            font-size: 22px;
+        }
+
+        .login-box p {
+            margin: 0 0 20px 0;
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3182CE;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .login-box button:hover {
+            background-color: #2B6CB0;
+        }
+
+        #mensagem-erro {
+            color: #e53e3e;
+            font-size: 13px;
+            margin-top: 10px;
+            font-weight: bold;
+            display: none;
+        }
+
+        #print-wrapper {
+            display: none;
+            width: 100%;
+        }
+
+        .quebra-pagina {
+            page-break-after: always;
+            margin-bottom: 20px;
+        }
+
+        optgroup {
+            font-weight: bold;
+            color: #2B6CB0;
+            background: #f7fafc;
+        }
+
+        option {
+            color: #333;
+            background: #fff;
+            font-weight: normal;
+        }
+
+        .mostrar-impressao {
+            display: none;
+        }
+
+        /* 👇 AJUSTES FINOS DA IMPRESSORA 👇 */
+        @media print {
+            body {
+                background-color: #fff;
+                padding: 0;
+                margin: 0;
+            }
+
+            @page {
+                margin: 0.4cm;
+            }
+
+            .controles,
+            .controles-avancados,
+            .aviso-clique,
+            .modal-overlay,
+            #tela-carregamento,
+            #tela-login {
+                display: none !important;
+            }
+
+            .editavel {
+                background-color: transparent;
+                border: none;
+                padding: 0;
+            }
+
+            .dia-util {
+                cursor: default;
+            }
+
+            .rotulo-editavel,
+            .motivo-feriado {
+                border: none !important;
+            }
+
+            .motivo-feriado:empty:before {
+                content: "";
+            }
+
+            body.modo-lote #folha-impressao {
+                display: none !important;
+            }
+
+            body.modo-lote #print-wrapper {
+                display: block !important;
+            }
+
+            body:not(.modo-lote) #folha-impressao {
+                display: block !important;
+                box-shadow: none;
+                padding: 0;
+                border: none;
+            }
+
+            body:not(.modo-lote) #print-wrapper {
+                display: none !important;
+            }
+
+            /* ACHATAMENTO DAS LINHAS: de 28px para 25px para sobrar espaço embaixo */
+            .tabela-ponto td {
+                height: 25px !important;
+                padding: 0px 4px !important;
+                font-size: 13px !important;
+            }
+
+            .tabela-ponto th {
+                padding: 4px !important;
+                font-size: 12px !important;
+            }
+
+            .tabela-info td {
+                padding: 6px !important;
+                font-size: 13px !important;
+            }
+
+            .tabela-info,
+            .tabela-ponto {
+                margin-bottom: 5px !important;
+            }
+
+            .cabecalho-container {
+                margin-bottom: 5px !important;
+                min-height: 65px !important;
+            }
+
+            .cabecalho-logo img {
+                max-height: 65px !important;
+            }
+
+            .cabecalho-textos h3 {
+                font-size: 13px !important;
+                margin: 0 !important;
+            }
+
+            .cabecalho-textos p {
+                font-size: 10px !important;
+                margin: 1px 0 !important;
+            }
+
+            .cabecalho-textos h2 {
+                font-size: 15px !important;
+                margin-top: 5px !important;
+                margin-bottom: 5px !important;
+            }
+
+            /* ESPAÇO EXTRA: Empurra a assinatura para baixo para não grudar na tabela */
+            .assinaturas-rodape {
+                margin-top: 30px !important;
+                margin-bottom: 10px !important;
+            }
+
+            .quebra-pagina {
+                page-break-after: always;
+                page-break-inside: avoid;
+                margin-bottom: 0;
+            }
+
+            .esconder-impressao {
+                display: none !important;
+            }
+
+            .mostrar-impressao {
+                display: inline !important;
+                color: #000 !important;
+                font-weight: bold;
+            }
+        }
