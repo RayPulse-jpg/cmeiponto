@@ -39,15 +39,18 @@
         .tabela-info td { font-weight: bold; padding: 8px; }
         .tabela-ponto th { background-color: #f0f0f0; text-align: center; padding: 8px 4px; }
         .tabela-ponto td { text-align: center; height: 32px; } 
-        .fim-de-semana { background-color: #e2e8f0; font-weight: bold; letter-spacing: 2px; }
-        .linha-individual { background-color: #fefcbf; font-weight: bold; letter-spacing: 1px; color: #744210; }
+        
+        /* 👇 GARANTIA DE CENTRALIZAÇÃO PARA FERIADOS 👇 */
+        .fim-de-semana { background-color: #e2e8f0; font-weight: bold; letter-spacing: 2px; text-align: center !important; }
+        .linha-individual { background-color: #fefcbf; font-weight: bold; letter-spacing: 1px; color: #744210; text-align: center !important; }
         .dia-util { cursor: pointer; transition: background-color 0.2s; } .dia-util:hover { background-color: #edf2f7; }
         
         .editavel { background-color: #fffae6; border-bottom: 1px dashed #ccc; cursor: text; padding: 1px 3px; border-radius: 2px; display: inline-block; min-width: 50px; }
         .editavel:focus { background-color: #fff; outline: 2px solid #3182CE; border-bottom: none; }
         
-        .rotulo-editavel { cursor: text; border-bottom: 1px dashed #999; display: inline-block; min-width: 60px; padding: 0 4px; }
-        .motivo-feriado { background-color: transparent; border-bottom: 1px dashed #999; cursor: text; padding: 0 5px; outline: none; font-family: inherit; text-transform: uppercase; display: inline-block; min-width: 30px; }
+        /* 👇 ALINHAMENTO CENTRALIZADO DOS RÓTULOS 👇 */
+        .rotulo-editavel { cursor: text; border-bottom: 1px dashed #999; display: inline-block; min-width: 60px; padding: 0 4px; text-align: center; }
+        .motivo-feriado { background-color: transparent; border-bottom: 1px dashed #999; cursor: text; padding: 0 5px; outline: none; font-family: inherit; text-transform: uppercase; display: inline-block; min-width: 30px; text-align: center; }
         .motivo-feriado:empty:before { content: " - CLIQUE PARA DESCREVER"; color: #718096; font-style: italic; font-weight: normal; text-transform: none; }
         
         .assinaturas-rodape { margin-top: 35px; display: flex; justify-content: center; text-align: center; padding: 0 20px; } .bloco-assinatura { width: 50%; }
@@ -74,6 +77,7 @@
         
         .mostrar-impressao { display: none; }
         
+        /* 👇 AJUSTES FINOS DA IMPRESSORA 👇 */
         @media print {
             body { background-color: #fff; padding: 0; margin: 0; } 
             @page { margin: 0.4cm; } 
@@ -86,7 +90,8 @@
             body.modo-lote #folha-impressao { display: none !important; } body.modo-lote #print-wrapper { display: block !important; }
             body:not(.modo-lote) #folha-impressao { display: block !important; box-shadow: none; padding: 0; border: none; } body:not(.modo-lote) #print-wrapper { display: none !important; }
             
-            .tabela-ponto td { height: 28px !important; padding: 0px 4px !important; font-size: 13px !important; } 
+            /* ACHATAMENTO DAS LINHAS: de 28px para 25px para sobrar espaço embaixo */
+            .tabela-ponto td { height: 25px !important; padding: 0px 4px !important; font-size: 13px !important; } 
             .tabela-ponto th { padding: 4px !important; font-size: 12px !important; }
             .tabela-info td { padding: 6px !important; font-size: 13px !important; }
             .tabela-info, .tabela-ponto { margin-bottom: 5px !important; }
@@ -96,7 +101,9 @@
             .cabecalho-textos h3 { font-size: 13px !important; margin: 0 !important;}
             .cabecalho-textos p { font-size: 10px !important; margin: 1px 0 !important; }
             .cabecalho-textos h2 { font-size: 15px !important; margin-top: 5px !important; margin-bottom: 5px !important;}
-            .assinaturas-rodape { margin-top: 15px !important; }
+            
+            /* ESPAÇO EXTRA: Empurra a assinatura para baixo para não grudar na tabela */
+            .assinaturas-rodape { margin-top: 30px !important; margin-bottom: 10px !important; }
             
             .quebra-pagina { page-break-after: always; page-break-inside: avoid; margin-bottom: 0; }
             
@@ -426,8 +433,6 @@
                 document.getElementById('servidor-nome').textContent = servidor.nome;
                 document.getElementById('servidor-cpf').textContent = servidor.cpf;
                 document.getElementById('servidor-cargo').textContent = servidor.cargo;
-                
-                // Atualiza o seletor de turno para mostrar o que está salvo
                 document.getElementById('seletor-turno').value = servidor.turno || "MANUAL";
             } else {
                 document.getElementById('servidor-nome').textContent = "SELECIONE NA LISTA ACIMA";
@@ -438,7 +443,6 @@
             gerarFolha();
         }
 
-        // 👇 NOVA FUNÇÃO PARA ATUALIZAR O HORÁRIO DO SERVIDOR 👇
         function atualizarTurno() {
             const index = document.getElementById('seletor-servidor').value;
             if (index === "") return;
@@ -447,16 +451,15 @@
             if (bancoServidores[index].turno !== novoTurno) {
                 bancoServidores[index].turno = novoTurno;
                 salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
-                gerarFolha(); // Recarrega a folha na mesma hora para exibir os horários
+                gerarFolha(); 
             }
         }
 
-        // 👇 NOVA FUNÇÃO PARA GERAR AS CÉLULAS COM AS HORAS 👇
         function obterCelulasHoras(turno) {
             if (turno === "MATUTINO") return `<td>08:00</td><td>12:00</td><td>---</td><td>---</td>`;
             if (turno === "VESPERTINO") return `<td>---</td><td>---</td><td>13:00</td><td>17:00</td>`;
             if (turno === "INTEGRAL") return `<td>08:00</td><td>12:00</td><td>13:00</td><td>17:00</td>`;
-            return `<td></td><td></td><td></td><td></td>`; // MANUAL (Em branco)
+            return `<td></td><td></td><td></td><td></td>`; 
         }
 
         function abrirModal() { document.getElementById('modalAdd').style.display = 'flex'; }
@@ -569,7 +572,6 @@
             removerDaNuvem(`ausencia_${nomeAtual}_${ano}_${mes}_${diaNumero}`);
 
             if (novoEstado === ESTADOS.NORMAL) {
-                // Ao voltar para normal, repõe os horários automaticamente
                 linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + `<td></td>`;
                 removerDaNuvem(chave);
             } else {
@@ -604,7 +606,6 @@
                     linhaElemento.innerHTML = celulaDiaHtml + obterConteudoLinha(dadosGeral, 'geral', chaveGeral);
                     linhaElemento.setAttribute('data-estado-geral', dadosGeral.estado);
                 } else {
-                    // Ao voltar para normal, repõe os horários automaticamente
                     linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + `<td></td>`;
                     linhaElemento.setAttribute('data-estado-geral', '0');
                 }
@@ -677,8 +678,6 @@
                     } else {
                         tr.setAttribute('data-estado-geral', '0');
                         tr.setAttribute('data-estado-individual', '0');
-                        
-                        // 👇 HORAS AUTOMÁTICAS INSERIDAS AQUI 👇
                         tr.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + `<td></td>`;
                     }
 
@@ -689,13 +688,11 @@
             }
         }
 
-        // 👇 NOVA FUNÇÃO PARA GERAR O EXCEL 👇
         function exportarExcel() {
             if (bancoServidores.length === 0) { alert("A lista de servidores está vazia!"); return; }
             
-            // O código \uFEFF é um truque para o Excel do Brasil reconhecer os acentos (ç, ã)
             let csv = '\uFEFF'; 
-            csv += "NOME;CPF;CARGO;SETOR;TURNO\n"; // Cabeçalho das colunas
+            csv += "NOME;CPF;CARGO;SETOR;TURNO\n"; 
 
             bancoServidores.forEach(s => {
                 let turnoFormatado = s.turno || "MANUAL";
