@@ -778,9 +778,15 @@
 
             body:not(.modo-lote) #folha-impressao {
                 display: block !important;
-                box-shadow: none;
-                padding: 0;
-                border: none;
+            }
+
+            .folha-container {
+                box-shadow: none !important;
+                padding: 0 !important;
+                border: none !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+                border-radius: 0 !important;
             }
 
             body:not(.modo-lote) #print-wrapper {
