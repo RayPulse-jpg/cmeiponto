@@ -1,8 +1,23 @@
-        /* Estilos Gerais */
+        /* Novo Design System Baseado em Variáveis CSS */
+        :root {
+            --primary-color: #6366f1;
+            /* Indigo */
+            --primary-hover: #4f46e5;
+            --secondary-color: #ec4899;
+            /* Pink */
+            --bg-gradient-start: #f0f4ff;
+            --bg-gradient-end: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-light: #cbd5e1;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
+            font-family: 'Inter', 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            color: var(--text-main);
             margin: 0;
             padding: 20px;
             display: flex;
@@ -10,21 +25,81 @@
             align-items: center;
         }
 
-        .controles,
-        .controles-avancados {
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 10px;
+        /* Topo Administrativo */
+        .topo-avancado {
+            background: linear-gradient(to right, #1e293b, #0f172a);
+            color: white;
+            border-radius: 12px;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border: none;
+            box-sizing: border-box;
+        }
+
+        .header-titulo h2 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header-titulo p {
+            margin: 2px 0 0 0;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        .botoes-acao-rapida {
             display: flex;
             gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-            justify-content: center;
+        }
+
+        /* Painel de Controles (Glassmorphism) */
+        .painel-principal {
             width: 100%;
-            max-width: 950px;
+            max-width: 1000px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
             box-sizing: border-box;
+        }
+
+        .controles-foco {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: space-between;
+        }
+
+        .box-controle {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .box-controle label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .grupo-seletor-moderno {
+            display: flex;
+            gap: 8px;
         }
 
         .grupo-seletor {
@@ -33,102 +108,157 @@
             align-items: center;
         }
 
+        /* Inputs e Selects Modernizados */
         select,
-        button,
-        input {
-            padding: 8px 10px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
+        input,
+        button {
+            font-family: inherit;
         }
 
         select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-main);
+            background-color: white;
+            transition: all 0.2s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
             cursor: pointer;
-            transition: border-color 0.2s;
         }
 
+        select:focus,
         select:hover {
-            border-color: #3182CE;
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
 
+        /* Destaques visuais */
+        .destaque {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            font-weight: 600;
+        }
+
+        .destaque-turno {
+            border-color: #8b5cf6;
+            background-color: #f5f3ff;
+            font-weight: 600;
+        }
+
+        .periodo-box {
+            display: flex;
+            flex-direction: row;
+            gap: 15px;
+        }
+
+        .periodo-box>div {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Botões Modernizados */
         button {
-            background-color: #4A5568;
-            color: white;
             border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.2s;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
 
         .btn-imprimir {
-            background-color: #3182CE;
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 6px rgba(99, 102, 241, 0.3);
         }
 
         .btn-imprimir:hover {
-            background-color: #2B6CB0;
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
         }
 
         .btn-lote {
-            background-color: #dd6b20;
+            background-color: var(--secondary-color);
+            color: white;
+            box-shadow: 0 4px 6px rgba(236, 72, 153, 0.3);
         }
 
         .btn-lote:hover {
-            background-color: #c05621;
-        }
-
-        .btn-add {
-            background-color: #38a169;
-            padding: 8px 10px;
-        }
-
-        .btn-add:hover {
-            background-color: #2f855a;
-        }
-
-        .btn-del {
-            background-color: #e53e3e;
-            padding: 8px 10px;
-        }
-
-        .btn-del:hover {
-            background-color: #c53030;
-        }
-
-        .btn-backup {
-            background-color: #4a5568;
-        }
-
-        .btn-backup:hover {
-            background-color: #2d3748;
-        }
-
-        .btn-excel {
-            background-color: #38a169;
-        }
-
-        .btn-excel:hover {
-            background-color: #2f855a;
+            background-color: #db2777;
+            transform: translateY(-1px);
         }
 
         .btn-sair {
-            background-color: #e53e3e;
-            padding: 8px 15px;
-            margin-left: 5px;
+            background-color: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
         }
 
         .btn-sair:hover {
-            background-color: #c53030;
+            background-color: #fef2f2;
+        }
+
+        .btn-add {
+            background-color: #10b981;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .btn-del {
+            background-color: #ef4444;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .btn-backup {
+            background-color: #64748b;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .btn-backup:hover {
+            background-color: #475569;
+            transform: translateY(-1px);
+        }
+
+        .btn-excel {
+            background-color: #10b981;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .btn-excel:hover {
+            background-color: #059669;
+            transform: translateY(-1px);
         }
 
         .folha-container {
-            background-color: #fff;
-            padding: 20px 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
             width: 100%;
             max-width: 900px;
             box-sizing: border-box;
+            border: 1px solid #f1f5f9;
         }
 
         .cabecalho-container {
