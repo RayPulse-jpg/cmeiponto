@@ -1015,11 +1015,22 @@ function imprimirTodosLote() {
     }
 
     mostrarCarregamento("🖨️ Preparando impressões em lote...");
+
+    // 1) Salvar estado atual da busca e do servidor selecionado
+    const buscaEl = DOM.buscaServidor();
+    const buscaAnterior = buscaEl ? buscaEl.value : '';
     const indiceOriginal = DOM.seletorServidor().value;
+
+    // 2) Limpar busca e recarregar lista COMPLETA (sem filtro de texto)
+    if (buscaEl) buscaEl.value = '';
+    carregarListaServidores('');
+
+    // 3) Preparar wrapper de impressão
     const printWrapper = DOM.printWrapper();
     printWrapper.innerHTML = '';
     document.body.classList.add('modo-lote');
 
+    // 4) Iterar e clonar cada servidor
     for (let i = 0; i < bancoServidores.length; i++) {
         const categoriaServidor = bancoServidores[i].categoria || CATEGORIAS.APOIO;
 
@@ -1029,19 +1040,29 @@ function imprimirTodosLote() {
             const cloneArea = DOM.folhaImpressao().cloneNode(true);
             cloneArea.removeAttribute('id');
             cloneArea.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+            // Remover resumo-folha dos clones (não deve aparecer na impressão)
+            const resumoClone = cloneArea.querySelector('.resumo-folha');
+            if (resumoClone) resumoClone.remove();
             cloneArea.classList.add('quebra-pagina');
             printWrapper.appendChild(cloneArea);
         }
     }
 
+    // 5) Imprimir
     setTimeout(() => {
         window.print();
         esconderCarregamento();
     }, 500);
 
+    // 6) Restaurar estado após impressão
     window.onafterprint = function () {
         document.body.classList.remove('modo-lote');
         printWrapper.innerHTML = '';
+
+        // Restaurar busca e lista
+        if (buscaEl) buscaEl.value = buscaAnterior;
+        carregarListaServidores(buscaAnterior);
+
         DOM.seletorServidor().value = indiceOriginal || "";
         preencherServidor();
         gerarFolha();
