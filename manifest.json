@@ -1,7 +1,7 @@
 {
-    "name": "Folha de Ponto CMEI",
-    "short_name": "Ponto CMEI",
-    "description": "Gerador de Folha de Ponto - CMEI Maria Jandira",
+    "name": "AutomaPonto",
+    "short_name": "AutomaPonto",
+    "description": "AutomaPonto - Sistema inteligente de geração e gerenciamento de folhas de ponto para instituições de ensino.",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#f0f4ff",

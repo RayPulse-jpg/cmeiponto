@@ -199,7 +199,7 @@ function mostrarSalvo() {
 // CARREGAMENTO / UI
 // ============================================================
 
-function mostrarCarregamento(mensagem = "☁️ Conectando ao Banco de Dados CMEI...") {
+function mostrarCarregamento(mensagem = "☁️ Conectando ao Banco de Dados AutomaPonto...") {
     const tela = DOM.telaCarregamento();
     if (tela) {
         tela.textContent = mensagem;
@@ -947,7 +947,7 @@ function exportarExcel() {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", "RH_Servidores_CMEI.csv");
+    link.setAttribute("download", "RH_Servidores_AutomaPonto.csv");
     document.body.appendChild(link);
     link.click();
     link.remove();

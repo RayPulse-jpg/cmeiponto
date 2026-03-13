@@ -2,9 +2,9 @@
            DESIGN SYSTEM - Variáveis CSS
            ============================================================ */
         :root {
-            --primary-color: #6366f1;
-            --primary-hover: #4f46e5;
-            --secondary-color: #ec4899;
+            --primary-color: #2563EB;
+            --primary-hover: #1D4ED8;
+            --secondary-color: #10B981;
             --bg-gradient-start: #f0f4ff;
             --bg-gradient-end: #ffffff;
             --card-bg: rgba(255, 255, 255, 0.9);
