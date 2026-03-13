@@ -10,11 +10,10 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 
 <body>
-
 
     <div id="tela-carregamento" style="display: flex;">☁️ Verificando acesso...</div>
 
@@ -25,20 +24,19 @@
         </div>
 
         <div class="botoes-acao-rapida">
-            <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Atual</button>
-            <button class="btn-lote" onclick="imprimirTodosLote()">🖨️ Imprimir em Lote</button>
-            <button class="btn-sair" onclick="fazerLogout()" title="Sair com Segurança">Sair 🔒</button>
-            <button class="btn-backup" onclick="revelarBackup()" title="Administrador">⚙️ Opções</button>
+            <button class="btn-imprimir" aria-label="Imprimir página atual">🖨️ Imprimir Atual</button>
+            <button class="btn-lote" aria-label="Imprimir todos os servidores em lote">🖨️ Imprimir em Lote</button>
+            <button class="btn-sair" title="Sair com Segurança" aria-label="Sair do sistema">Sair 🔒</button>
+            <button class="btn-backup" title="Administrador" aria-label="Abrir opções de administrador">⚙️ Opções</button>
         </div>
     </div>
 
     <!-- Container Oculto do Administrador -->
-    <div id="painel-secreto"
-        style="display: none; gap: 15px; margin-bottom: 20px; width: 100%; max-width: 1000px; justify-content: flex-end;">
-        <button class="btn-excel" onclick="exportarExcel()">📊 Exportar para Excel</button>
-        <button class="btn-backup" onclick="exportarBackup()">💾 Exportar Backup</button>
-        <button class="btn-add" onclick="document.getElementById('file-import').click()">📂 Restaurar Backup</button>
-        <input type="file" id="file-import" style="display: none;" accept=".json" onchange="importarBackup(event)">
+    <div id="painel-secreto" class="painel-admin hidden">
+        <button class="btn-excel">📊 Exportar para Excel</button>
+        <button class="btn-backup">💾 Exportar Backup</button>
+        <button class="btn-add">📂 Restaurar Backup</button>
+        <input type="file" id="file-import" class="hidden" accept=".json">
     </div>
 
     <div class="painel-principal controles-avancados">
@@ -47,10 +45,9 @@
             <div class="box-controle">
                 <label for="seletor-servidor">Servidor:</label>
                 <div class="grupo-seletor-moderno">
-                    <select id="seletor-servidor" onchange="preencherServidor()"></select>
-                    <button class="btn-add" onclick="abrirModal()" title="Cadastrar Novo Servidor">➕</button>
-                    <button class="btn-del" onclick="removerServidor()"
-                        title="Remover Servidor Selecionado">🗑️</button>
+                    <select id="seletor-servidor"></select>
+                    <button class="btn-add" title="Cadastrar Novo Servidor">➕</button>
+                    <button class="btn-del" title="Remover Servidor Selecionado">🗑️</button>
                 </div>
             </div>
 
@@ -68,7 +65,7 @@
 
             <div class="box-controle">
                 <label for="seletor-turno">Turno Padrão:</label>
-                <select id="seletor-turno" class="destaque-turno" onchange="atualizarTurno()">
+                <select id="seletor-turno" class="destaque-turno">
                     <option value="MANUAL">✏️ Manual</option>
                     <option value="MATUTINO">🌅 Matutino</option>
                     <option value="VESPERTINO">🌇 Vespertino</option>
@@ -80,7 +77,7 @@
             <div class="box-controle periodo-box">
                 <div>
                     <label for="mes">Mês:</label>
-                    <select id="mes" onchange="gerarFolha()">
+                    <select id="mes">
                         <option value="1">JANEIRO</option>
                         <option value="2">FEVEREIRO</option>
                         <option value="3" selected>MARÇO</option>
@@ -97,7 +94,7 @@
                 </div>
                 <div>
                     <label for="ano">Ano:</label>
-                    <select id="ano" onchange="gerarFolha()">
+                    <select id="ano">
                         <option value="2025">2025</option>
                         <option value="2026" selected>2026</option>
                         <option value="2027">2027</option>
@@ -111,28 +108,25 @@
     <div id="modalAdd" class="modal-overlay">
         <div class="modal-content">
             <h3>Cadastrar Novo Servidor</h3>
-            <input type="text" id="novo-nome" placeholder="Nome Completo"
-                oninput="this.value = this.value.toUpperCase()">
-            <input type="text" id="novo-cpf" placeholder="CPF (Apenas números)" oninput="mascaraCPF(this)"
-                maxlength="14">
-            <input type="text" id="novo-cargo" placeholder="Cargo (Ex: Auxiliar)"
-                oninput="this.value = this.value.toUpperCase()">
-            <select id="novo-categoria" style="width: 100%;">
+            <input type="text" id="novo-nome" placeholder="Nome Completo">
+            <input type="text" id="novo-cpf" placeholder="CPF (Apenas números)" maxlength="14">
+            <input type="text" id="novo-cargo" placeholder="Cargo (Ex: Auxiliar)">
+            <select id="novo-categoria">
                 <option value="">-- Selecione o Setor --</option>
                 <option value="A - ADMINISTRATIVO">Administrativo</option>
                 <option value="B - PROFESSORAS">Professoras</option>
                 <option value="C - MONITORAS">Monitoras</option>
                 <option value="D - EQUIPE DE APOIO">Equipe de Apoio</option>
             </select>
-            <select id="novo-turno" style="width: 100%;">
+            <select id="novo-turno">
                 <option value="MANUAL">Horário: Manual (Em Branco)</option>
                 <option value="MATUTINO">Horário: Matutino (08h-12h)</option>
                 <option value="VESPERTINO">Horário: Vespertino (13h-17h)</option>
                 <option value="INTEGRAL">Horário: Integral (08h-17h)</option>
             </select>
             <div class="modal-botoes">
-                <button class="btn-cancelar" onclick="fecharModal()">Cancelar</button>
-                <button class="btn-add" onclick="salvarNovoServidor()">Salvar na Nuvem</button>
+                <button class="btn-cancelar">Cancelar</button>
+                <button class="btn-add">Salvar na Nuvem</button>
             </div>
         </div>
     </div>
@@ -141,7 +135,7 @@
 
     <div class="folha-container" id="folha-impressao">
         <div class="cabecalho-container">
-            <div class="cabecalho-logo" ondblclick="revelarBackup()" title="Área Administrativa">
+            <div class="cabecalho-logo" title="Área Administrativa">
                 <img src="logo.png" alt="Logo da Unidade" onerror="this.style.display='none'">
             </div>
             <div class="cabecalho-textos">
@@ -156,8 +150,8 @@
             <tr>
                 <td colspan="2">SERVIDOR(A): <span id="servidor-nome" class="editavel" contenteditable="true"
                         spellcheck="false">SELECIONE NA LISTA ACIMA</span></td>
-                <td>CPF: <span id="servidor-cpf" class="editavel" contenteditable="true" spellcheck="false"
-                        oninput="mascaraCPF(this)">000.000.000-00</span></td>
+                <td>CPF: <span id="servidor-cpf" class="editavel" contenteditable="true"
+                        spellcheck="false">000.000.000-00</span></td>
             </tr>
             <tr>
                 <td colspan="3">CARGO/FUNÇÃO: <span id="servidor-cargo" class="editavel" contenteditable="true"

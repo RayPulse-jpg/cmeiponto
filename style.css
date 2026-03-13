@@ -1,4 +1,6 @@
-        /* Novo Design System Baseado em Variáveis CSS */
+        /* ============================================================
+           DESIGN SYSTEM - Variáveis CSS
+           ============================================================ */
         :root {
             --primary-color: #6366f1;
             /* Indigo */
@@ -11,6 +13,21 @@
             --text-main: #1e293b;
             --text-muted: #64748b;
             --border-light: #cbd5e1;
+        }
+
+        /* ============================================================
+           UTILITÁRIOS
+           ============================================================ */
+        .hidden {
+            display: none;
+        }
+
+        .painel-admin {
+            gap: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 1000px;
+            justify-content: flex-end;
         }
 
         body {
@@ -500,7 +517,6 @@
         }
 
         #tela-carregamento {
-            display: none;
             position: fixed;
             top: 0;
             left: 0;

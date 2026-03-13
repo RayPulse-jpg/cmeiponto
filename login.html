@@ -10,11 +10,11 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 
 <body>
-    <div id="tela-login" style="display: none;">
+    <div id="tela-login" class="hidden">
         <div class="login-wrapper">
             <div class="login-box">
                 <!-- COLUNA ESQUERDA: ILUSTRAÇÃO -->
@@ -28,12 +28,10 @@
                     <div class="login-logo-mobile">CMEI Maria Jandira</div>
                     <h3>Faça seu Login</h3>
                     <p class="login-subtitle">Acesso Restrito à Secretaria</p>
-                    <input type="email" id="login-email" placeholder="E-mail de acesso"
-                        onkeypress="if(event.key === 'Enter') fazerLogin()">
-                    <input type="password" id="login-senha" placeholder="Senha"
-                        onkeypress="if(event.key === 'Enter') fazerLogin()">
-                    <button class="btn-login-gradient" onclick="fazerLogin()">Entrar no Sistema</button>
-                    <div id="mensagem-erro">Usuário ou senha incorretos.</div>
+                    <input type="email" id="login-email" placeholder="E-mail de acesso">
+                    <input type="password" id="login-senha" placeholder="Senha">
+                    <button class="btn-login-gradient">Entrar no Sistema</button>
+                    <div id="mensagem-erro" aria-live="polite">Usuário ou senha incorretos.</div>
                 </div>
             </div>
         </div>

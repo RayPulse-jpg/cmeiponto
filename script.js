@@ -1,3 +1,7 @@
+// ============================================================
+// CONSTANTES E CONFIGURAÇÃO
+// ============================================================
+
 const ROTULOS = {
     faltaJustificada: "FALTA JUSTIFICADA",
     atestadoMedico: "ATESTADO MÉDICO",
@@ -6,6 +10,64 @@ const ROTULOS = {
 };
 
 const ESTADOS = { NORMAL: 0, JUSTIFICADA: 1, MEDICO: 2 };
+
+const TURNOS = {
+    MANUAL: "MANUAL",
+    MATUTINO: "MATUTINO",
+    VESPERTINO: "VESPERTINO",
+    INTEGRAL: "INTEGRAL"
+};
+
+const CATEGORIAS = {
+    ADMINISTRATIVO: "A - ADMINISTRATIVO",
+    PROFESSORAS: "B - PROFESSORAS",
+    MONITORAS: "C - MONITORAS",
+    APOIO: "D - EQUIPE DE APOIO"
+};
+
+const SERVIDOR_PADRAO = {
+    nome: "SELECIONE NA LISTA ACIMA",
+    cpf: "000.000.000-00",
+    cargo: "..."
+};
+
+// ============================================================
+// CACHE DE SELETORES DOM (lazy getters)
+// ============================================================
+
+const DOM = {
+    telaCarregamento: () => document.getElementById('tela-carregamento'),
+    seletorServidor: () => document.getElementById('seletor-servidor'),
+    servidorNome: () => document.getElementById('servidor-nome'),
+    servidorCpf: () => document.getElementById('servidor-cpf'),
+    servidorCargo: () => document.getElementById('servidor-cargo'),
+    seletorTurno: () => document.getElementById('seletor-turno'),
+    tituloPeriodo: () => document.getElementById('titulo-periodo'),
+    corpoTabela: () => document.getElementById('corpo-tabela'),
+    selectMes: () => document.getElementById('mes'),
+    selectAno: () => document.getElementById('ano'),
+    filtroSetor: () => document.getElementById('filtro-setor'),
+    painelSecreto: () => document.getElementById('painel-secreto'),
+    modalAdd: () => document.getElementById('modalAdd'),
+    printWrapper: () => document.getElementById('print-wrapper'),
+    folhaImpressao: () => document.getElementById('folha-impressao'),
+    fileImport: () => document.getElementById('file-import'),
+    // Campos do modal
+    novoNome: () => document.getElementById('novo-nome'),
+    novoCpf: () => document.getElementById('novo-cpf'),
+    novoCargo: () => document.getElementById('novo-cargo'),
+    novoCategoria: () => document.getElementById('novo-categoria'),
+    novoTurno: () => document.getElementById('novo-turno'),
+    // Login
+    loginEmail: () => document.getElementById('login-email'),
+    loginSenha: () => document.getElementById('login-senha'),
+    mensagemErro: () => document.getElementById('mensagem-erro'),
+    telaLogin: () => document.getElementById('tela-login'),
+};
+
+// ============================================================
+// FIREBASE
+// ============================================================
 
 const pt1 = "AIzaSyCswoX";
 const pt2 = "WBPacdMKfHKUBil";
@@ -26,8 +88,16 @@ firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 const auth = firebase.auth();
 
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
+
 let memoriaNuvem = {};
 let bancoServidores = [];
+
+// ============================================================
+// FUNÇÕES UTILITÁRIAS
+// ============================================================
 
 function escapeHtml(unsafe) {
     return (unsafe || "").toString()
@@ -49,10 +119,25 @@ function mascaraCPF(campo) {
     else if (campo.textContent !== undefined) campo.textContent = cpf;
 }
 
-function cpfBasicoValido(cpf) { return cpf.replace(/[^\d]/g, '').length === 11; }
+function cpfBasicoValido(cpf) {
+    return cpf.replace(/[^\d]/g, '').length === 11;
+}
+
+function obterTurnoAtual() {
+    const index = DOM.seletorServidor().value;
+    return index !== "" ? (bancoServidores[index].turno || TURNOS.MANUAL) : TURNOS.MANUAL;
+}
+
+function obterNomeAtual() {
+    return DOM.servidorNome().textContent;
+}
+
+// ============================================================
+// CARREGAMENTO / UI
+// ============================================================
 
 function mostrarCarregamento(mensagem = "☁️ Conectando ao Banco de Dados CMEI...") {
-    const tela = document.getElementById('tela-carregamento');
+    const tela = DOM.telaCarregamento();
     if (tela) {
         tela.textContent = mensagem;
         tela.style.display = 'flex';
@@ -60,9 +145,13 @@ function mostrarCarregamento(mensagem = "☁️ Conectando ao Banco de Dados CME
 }
 
 function esconderCarregamento() {
-    const tela = document.getElementById('tela-carregamento');
+    const tela = DOM.telaCarregamento();
     if (tela) tela.style.display = 'none';
 }
+
+// ============================================================
+// AUTENTICAÇÃO
+// ============================================================
 
 const isLoginPage = window.location.pathname.includes('login.html');
 
@@ -71,7 +160,7 @@ auth.onAuthStateChanged((user) => {
         if (isLoginPage) {
             window.location.href = 'index.html';
         } else {
-            const telaLogin = document.getElementById('tela-login');
+            const telaLogin = DOM.telaLogin();
             if (telaLogin) telaLogin.style.display = 'none';
             mostrarCarregamento();
             carregarDadosDaNuvem();
@@ -80,7 +169,7 @@ auth.onAuthStateChanged((user) => {
         if (!isLoginPage) {
             window.location.href = 'login.html';
         } else {
-            const telaLogin = document.getElementById('tela-login');
+            const telaLogin = DOM.telaLogin();
             if (telaLogin) telaLogin.style.display = 'flex';
             esconderCarregamento();
         }
@@ -88,20 +177,28 @@ auth.onAuthStateChanged((user) => {
 });
 
 function fazerLogin() {
-    const email = document.getElementById('login-email').value.trim();
-    const senha = document.getElementById('login-senha').value;
-    const msgErro = document.getElementById('mensagem-erro');
+    const email = DOM.loginEmail().value.trim();
+    const senha = DOM.loginSenha().value;
+    const msgErro = DOM.mensagemErro();
 
-    if (!email || !senha) { msgErro.textContent = "Preencha o e-mail e a senha."; msgErro.style.display = 'block'; return; }
+    if (!email || !senha) {
+        msgErro.textContent = "Preencha o e-mail e a senha.";
+        msgErro.style.display = 'block';
+        return;
+    }
 
     auth.signInWithEmailAndPassword(email, senha)
-        .then(() => { msgErro.style.display = 'none'; })
+        .then(() => {
+            msgErro.style.display = 'none';
+        })
         .catch((error) => {
-            let mensagem = "E-mail ou senha incorretos!";
-            if (error.code === 'auth/network-request-failed' || error.code === 'auth/api-key-not-valid') mensagem = "Bloqueado por Segurança. Teste através do link do GitHub!";
-            else if (error.code === 'auth/too-many-requests') mensagem = "Muitas tentativas. Tente novamente mais tarde.";
-            else if (error.code === 'auth/user-not-found') mensagem = "Usuário não encontrado.";
-            msgErro.textContent = mensagem;
+            const mensagens = {
+                'auth/network-request-failed': "Bloqueado por Segurança. Teste através do link do GitHub!",
+                'auth/api-key-not-valid': "Bloqueado por Segurança. Teste através do link do GitHub!",
+                'auth/too-many-requests': "Muitas tentativas. Tente novamente mais tarde.",
+                'auth/user-not-found': "Usuário não encontrado."
+            };
+            msgErro.textContent = mensagens[error.code] || "E-mail ou senha incorretos!";
             msgErro.style.display = 'block';
         });
 }
@@ -110,36 +207,14 @@ function fazerLogout() {
     auth.signOut().then(() => {
         memoriaNuvem = {};
         bancoServidores = [];
-        const inputSenha = document.getElementById('login-senha');
+        const inputSenha = DOM.loginSenha();
         if (inputSenha) inputSenha.value = '';
     });
 }
 
-function carregarDadosDaNuvem() {
-    database.ref('cmei_dados').once('value')
-        .then((snapshot) => {
-            memoriaNuvem = snapshot.val() || {};
-            if (memoriaNuvem['listaServidores']) {
-                bancoServidores = JSON.parse(memoriaNuvem['listaServidores']);
-                let precisaSalvarNaDescida = false;
-                bancoServidores.forEach(s => {
-                    let cat = s.categoria || "";
-                    if (cat === "A - DIREÇÃO E COORDENAÇÃO" || cat === "D - SECRETARIA") { s.categoria = "A - ADMINISTRATIVO"; precisaSalvarNaDescida = true; }
-                    else if (cat === "C - AUXILIARES DE CLASSE" || cat === "H - OUTROS") { s.categoria = "C - MONITORAS"; precisaSalvarNaDescida = true; }
-                    else if (cat === "B - PROFESSORES") { s.categoria = "B - PROFESSORAS"; precisaSalvarNaDescida = true; }
-                    else if (cat === "E - SERVIÇOS GERAIS" || cat === "F - COZINHA E MERENDA" || cat === "G - PORTARIA E SEGURANÇA" || !cat) { s.categoria = "D - EQUIPE DE APOIO"; precisaSalvarNaDescida = true; }
-                });
-                if (precisaSalvarNaDescida) { salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores)); }
-            } else {
-                bancoServidores = [{ nome: "FERNANDA DE JESUS ALMEIDA", cpf: "049.131.865-07", cargo: "AUXILIAR DE COORDENAÇÃO", categoria: "A - ADMINISTRATIVO", turno: "MANUAL" }];
-            }
-            esconderCarregamento();
-            carregarListaServidores();
-            carregarDadosEditaveis();
-            gerarFolha();
-        })
-        .catch(() => { alert("Erro ao conectar no banco de dados."); esconderCarregamento(); });
-}
+// ============================================================
+// BANCO DE DADOS (NUVEM)
+// ============================================================
 
 function salvarNaNuvem(chave, valor) {
     memoriaNuvem[chave] = valor;
@@ -151,16 +226,91 @@ function removerDaNuvem(chave) {
     database.ref('cmei_dados/' + chave).remove();
 }
 
-function revelarBackup() {
-    const painel = document.getElementById('painel-secreto');
-    painel.style.display = painel.style.display === 'none' ? 'flex' : 'none';
-    if (painel.style.display === 'flex') alert("🔓 Modo Administrador ativado!");
+/**
+ * Migra categorias legadas para as novas categorias consolidadas.
+ * Retorna `true` se alguma migração foi realizada.
+ */
+function migrarCategoriasLegadas(servidores) {
+    const mapeamento = {
+        "A - DIREÇÃO E COORDENAÇÃO": CATEGORIAS.ADMINISTRATIVO,
+        "D - SECRETARIA": CATEGORIAS.ADMINISTRATIVO,
+        "C - AUXILIARES DE CLASSE": CATEGORIAS.MONITORAS,
+        "H - OUTROS": CATEGORIAS.MONITORAS,
+        "B - PROFESSORES": CATEGORIAS.PROFESSORAS,
+        "E - SERVIÇOS GERAIS": CATEGORIAS.APOIO,
+        "F - COZINHA E MERENDA": CATEGORIAS.APOIO,
+        "G - PORTARIA E SEGURANÇA": CATEGORIAS.APOIO,
+    };
+
+    let houveMigracao = false;
+
+    servidores.forEach(s => {
+        const cat = s.categoria || "";
+        if (mapeamento[cat] || !cat) {
+            s.categoria = mapeamento[cat] || CATEGORIAS.APOIO;
+            houveMigracao = true;
+        }
+    });
+
+    return houveMigracao;
 }
+
+function carregarDadosDaNuvem() {
+    database.ref('cmei_dados').once('value')
+        .then((snapshot) => {
+            memoriaNuvem = snapshot.val() || {};
+
+            if (memoriaNuvem['listaServidores']) {
+                bancoServidores = JSON.parse(memoriaNuvem['listaServidores']);
+                if (migrarCategoriasLegadas(bancoServidores)) {
+                    salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
+                }
+            } else {
+                bancoServidores = [{
+                    nome: "FERNANDA DE JESUS ALMEIDA",
+                    cpf: "049.131.865-07",
+                    cargo: "AUXILIAR DE COORDENAÇÃO",
+                    categoria: CATEGORIAS.ADMINISTRATIVO,
+                    turno: TURNOS.MANUAL
+                }];
+            }
+
+            esconderCarregamento();
+            carregarListaServidores();
+            carregarDadosEditaveis();
+            gerarFolha();
+        })
+        .catch((err) => {
+            console.error("Erro ao conectar no banco de dados:", err);
+            alert("Erro ao conectar no banco de dados. Verifique sua conexão.");
+            esconderCarregamento();
+        });
+}
+
+// ============================================================
+// PAINEL ADMINISTRADOR
+// ============================================================
+
+function revelarBackup() {
+    const painel = DOM.painelSecreto();
+    const estaOculto = painel.classList.contains('hidden');
+    painel.classList.toggle('hidden');
+    if (estaOculto) {
+        painel.style.display = 'flex';
+        alert("🔓 Modo Administrador ativado!");
+    } else {
+        painel.style.display = '';
+    }
+}
+
+// ============================================================
+// GERENCIAMENTO DE SERVIDORES
+// ============================================================
 
 function organizarEOrdenarServidores() {
     bancoServidores.sort((a, b) => {
-        let catA = a.categoria || "D - EQUIPE DE APOIO";
-        let catB = b.categoria || "D - EQUIPE DE APOIO";
+        const catA = a.categoria || CATEGORIAS.APOIO;
+        const catB = b.categoria || CATEGORIAS.APOIO;
         if (catA < catB) return -1;
         if (catA > catB) return 1;
         return a.nome.localeCompare(b.nome);
@@ -168,7 +318,7 @@ function organizarEOrdenarServidores() {
 }
 
 function carregarListaServidores() {
-    const seletor = document.getElementById('seletor-servidor');
+    const seletor = DOM.seletorServidor();
     seletor.innerHTML = '<option value="">-- Selecione ou Digite Abaixo --</option>';
     organizarEOrdenarServidores();
 
@@ -176,14 +326,14 @@ function carregarListaServidores() {
     let optGroupAtual = null;
 
     bancoServidores.forEach((servidor, index) => {
-        let cat = servidor.categoria || "D - EQUIPE DE APOIO";
+        const cat = servidor.categoria || CATEGORIAS.APOIO;
         if (cat !== categoriaAtual) {
             categoriaAtual = cat;
             optGroupAtual = document.createElement('optgroup');
             optGroupAtual.label = "📌 " + cat.substring(4);
             seletor.appendChild(optGroupAtual);
         }
-        let opcao = document.createElement('option');
+        const opcao = document.createElement('option');
         opcao.value = index;
         opcao.text = servidor.nome;
         if (optGroupAtual) optGroupAtual.appendChild(opcao);
@@ -192,26 +342,26 @@ function carregarListaServidores() {
 }
 
 function preencherServidor() {
-    const index = document.getElementById('seletor-servidor').value;
+    const index = DOM.seletorServidor().value;
     if (index !== "") {
         const servidor = bancoServidores[index];
-        document.getElementById('servidor-nome').textContent = servidor.nome;
-        document.getElementById('servidor-cpf').textContent = servidor.cpf;
-        document.getElementById('servidor-cargo').textContent = servidor.cargo;
-        document.getElementById('seletor-turno').value = servidor.turno || "MANUAL";
+        DOM.servidorNome().textContent = servidor.nome;
+        DOM.servidorCpf().textContent = servidor.cpf;
+        DOM.servidorCargo().textContent = servidor.cargo;
+        DOM.seletorTurno().value = servidor.turno || TURNOS.MANUAL;
     } else {
-        document.getElementById('servidor-nome').textContent = "SELECIONE NA LISTA ACIMA";
-        document.getElementById('servidor-cpf').textContent = "000.000.000-00";
-        document.getElementById('servidor-cargo').textContent = "...";
-        document.getElementById('seletor-turno').value = "MANUAL";
+        DOM.servidorNome().textContent = SERVIDOR_PADRAO.nome;
+        DOM.servidorCpf().textContent = SERVIDOR_PADRAO.cpf;
+        DOM.servidorCargo().textContent = SERVIDOR_PADRAO.cargo;
+        DOM.seletorTurno().value = TURNOS.MANUAL;
     }
     gerarFolha();
 }
 
 function atualizarTurno() {
-    const index = document.getElementById('seletor-servidor').value;
+    const index = DOM.seletorServidor().value;
     if (index === "") return;
-    const novoTurno = document.getElementById('seletor-turno').value;
+    const novoTurno = DOM.seletorTurno().value;
 
     if (bancoServidores[index].turno !== novoTurno) {
         bancoServidores[index].turno = novoTurno;
@@ -220,55 +370,13 @@ function atualizarTurno() {
     }
 }
 
-function obterCelulasHoras(turno) {
-    if (turno === "MATUTINO") return `<td>08:00</td><td>12:00</td><td>---</td><td>---</td>`;
-    if (turno === "VESPERTINO") return `<td>---</td><td>---</td><td>13:00</td><td>17:00</td>`;
-    if (turno === "INTEGRAL") return `<td>08:00</td><td>12:00</td><td>13:00</td><td>17:00</td>`;
-    return `<td></td><td></td><td></td><td></td>`;
-}
-
-function abrirModal() { document.getElementById('modalAdd').style.display = 'flex'; }
-function fecharModal() { document.getElementById('modalAdd').style.display = 'none';['novo-nome', 'novo-cpf', 'novo-cargo'].forEach(id => document.getElementById(id).value = ''); document.getElementById('novo-categoria').value = ''; document.getElementById('novo-turno').value = 'MANUAL'; }
-
-function salvarNovoServidor() {
-    let nome = document.getElementById('novo-nome').value.trim();
-    let cpf = document.getElementById('novo-cpf').value.trim();
-    let cargo = document.getElementById('novo-cargo').value.trim();
-    let categoria = document.getElementById('novo-categoria').value;
-    let turno = document.getElementById('novo-turno').value;
-
-    if (!nome || !cpf || !cargo || !categoria) { alert("Preencha todos os campos e selecione o Setor!"); return; }
-    if (!cpfBasicoValido(cpf)) { alert("CPF inválido (deve conter 11 dígitos)."); return; }
-    if (bancoServidores.some(s => s.cpf === cpf || s.nome === nome)) { alert("❌ Erro: Já existe um servidor com este Nome ou CPF!"); return; }
-
-    bancoServidores.push({ nome, cpf, cargo, categoria, turno });
-    organizarEOrdenarServidores();
-    salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
-    carregarListaServidores();
-    fecharModal();
-
-    let novaPosicao = bancoServidores.findIndex(s => s.cpf === cpf);
-    document.getElementById('seletor-servidor').value = novaPosicao;
-    preencherServidor();
-}
-
-function removerServidor() {
-    const index = document.getElementById('seletor-servidor').value;
-    if (index === "") { alert("⚠️ Selecione um servidor na lista para remover."); return; }
-    if (confirm(`Remover ${bancoServidores[index].nome} permanentemente?`)) {
-        bancoServidores.splice(index, 1);
-        salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
-        carregarListaServidores();
-        preencherServidor();
-    }
-}
-
 function atualizarServidorEditado() {
-    const index = document.getElementById('seletor-servidor').value;
+    const index = DOM.seletorServidor().value;
     if (index === "") return;
-    let novoNome = document.getElementById('servidor-nome').textContent.trim().toUpperCase();
-    let novoCpf = document.getElementById('servidor-cpf').textContent.trim();
-    let novoCargo = document.getElementById('servidor-cargo').textContent.trim().toUpperCase();
+
+    const novoNome = DOM.servidorNome().textContent.trim().toUpperCase();
+    const novoCpf = DOM.servidorCpf().textContent.trim();
+    const novoCargo = DOM.servidorCargo().textContent.trim().toUpperCase();
     let alterou = false;
 
     if (bancoServidores[index].nome !== novoNome) { bancoServidores[index].nome = novoNome; alterou = true; }
@@ -277,40 +385,116 @@ function atualizarServidorEditado() {
 
     if (alterou) {
         salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
-        let valorAtual = index;
+        const valorAtual = index;
         carregarListaServidores();
-        document.getElementById('seletor-servidor').value = valorAtual;
+        DOM.seletorServidor().value = valorAtual;
     }
 }
 
 function carregarDadosEditaveis() {
-    document.getElementById('servidor-nome').addEventListener('blur', atualizarServidorEditado);
-    document.getElementById('servidor-cpf').addEventListener('blur', atualizarServidorEditado);
-    document.getElementById('servidor-cargo').addEventListener('blur', atualizarServidorEditado);
+    DOM.servidorNome().addEventListener('blur', atualizarServidorEditado);
+    DOM.servidorCpf().addEventListener('blur', atualizarServidorEditado);
+    DOM.servidorCargo().addEventListener('blur', atualizarServidorEditado);
+}
+
+// ============================================================
+// MODAL DE CADASTRO
+// ============================================================
+
+function abrirModal() {
+    DOM.modalAdd().style.display = 'flex';
+}
+
+function fecharModal() {
+    DOM.modalAdd().style.display = 'none';
+    ['novo-nome', 'novo-cpf', 'novo-cargo'].forEach(id => document.getElementById(id).value = '');
+    DOM.novoCategoria().value = '';
+    DOM.novoTurno().value = TURNOS.MANUAL;
+}
+
+function salvarNovoServidor() {
+    const nome = DOM.novoNome().value.trim();
+    const cpf = DOM.novoCpf().value.trim();
+    const cargo = DOM.novoCargo().value.trim();
+    const categoria = DOM.novoCategoria().value;
+    const turno = DOM.novoTurno().value;
+
+    if (!nome || !cpf || !cargo || !categoria) {
+        alert("Preencha todos os campos e selecione o Setor!");
+        return;
+    }
+    if (!cpfBasicoValido(cpf)) {
+        alert("CPF inválido (deve conter 11 dígitos).");
+        return;
+    }
+    if (bancoServidores.some(s => s.cpf === cpf || s.nome === nome)) {
+        alert("❌ Erro: Já existe um servidor com este Nome ou CPF!");
+        return;
+    }
+
+    bancoServidores.push({ nome, cpf, cargo, categoria, turno });
+    organizarEOrdenarServidores();
+    salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
+    carregarListaServidores();
+    fecharModal();
+
+    const novaPosicao = bancoServidores.findIndex(s => s.cpf === cpf);
+    DOM.seletorServidor().value = novaPosicao;
+    preencherServidor();
+}
+
+function removerServidor() {
+    const index = DOM.seletorServidor().value;
+    if (index === "") {
+        alert("⚠️ Selecione um servidor na lista para remover.");
+        return;
+    }
+    if (confirm(`Remover ${bancoServidores[index].nome} permanentemente?`)) {
+        bancoServidores.splice(index, 1);
+        salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
+        carregarListaServidores();
+        preencherServidor();
+    }
+}
+
+// ============================================================
+// GERAÇÃO DA FOLHA DE PONTO
+// ============================================================
+
+function obterCelulasHoras(turno) {
+    const mapas = {
+        [TURNOS.MATUTINO]: '<td>08:00</td><td>12:00</td><td>---</td><td>---</td>',
+        [TURNOS.VESPERTINO]: '<td>---</td><td>---</td><td>13:00</td><td>17:00</td>',
+        [TURNOS.INTEGRAL]: '<td>08:00</td><td>12:00</td><td>13:00</td><td>17:00</td>',
+    };
+    return mapas[turno] || '<td></td><td></td><td></td><td></td>';
 }
 
 window.salvarRotulo = function (elemento) {
-    let chave = elemento.getAttribute('data-chave');
-    let dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1,"motivo":"","rotulo":""}');
+    const chave = elemento.getAttribute('data-chave');
+    const dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1,"motivo":"","rotulo":""}');
     dados.rotulo = elemento.textContent.toUpperCase();
     salvarNaNuvem(chave, JSON.stringify(dados));
-}
+};
 
 window.salvarMotivo = function (elemento) {
-    let chave = elemento.getAttribute('data-chave');
-    let dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1,"motivo":"","rotulo":""}');
+    const chave = elemento.getAttribute('data-chave');
+    const dados = JSON.parse(memoriaNuvem[chave] || '{"estado":1,"motivo":"","rotulo":""}');
     dados.motivo = elemento.textContent;
     salvarNaNuvem(chave, JSON.stringify(dados));
-}
+};
 
 function obterConteudoLinha(dados, tipo, chave) {
-    let rotuloPadrao = "";
-    if (tipo === 'geral') { rotuloPadrao = (dados.estado === ESTADOS.JUSTIFICADA) ? ROTULOS.feriado : ROTULOS.pontoFacultativo; }
-    else { rotuloPadrao = (dados.estado === ESTADOS.JUSTIFICADA) ? ROTULOS.faltaJustificada : ROTULOS.atestadoMedico; }
+    let rotuloPadrao;
+    if (tipo === 'geral') {
+        rotuloPadrao = (dados.estado === ESTADOS.JUSTIFICADA) ? ROTULOS.feriado : ROTULOS.pontoFacultativo;
+    } else {
+        rotuloPadrao = (dados.estado === ESTADOS.JUSTIFICADA) ? ROTULOS.faltaJustificada : ROTULOS.atestadoMedico;
+    }
 
-    let rotuloExibido = dados.rotulo || rotuloPadrao;
+    const rotuloExibido = dados.rotulo || rotuloPadrao;
     const classe = tipo === 'geral' ? 'fim-de-semana' : 'linha-individual';
-    let chaveSafe = escapeHtml(chave);
+    const chaveSafe = escapeHtml(chave);
 
     return `<td colspan="5" class="${classe}">
                 <span class="rotulo-editavel" data-chave="${chaveSafe}" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarRotulo(this)">${escapeHtml(rotuloExibido)}</span> 
@@ -319,30 +503,33 @@ function obterConteudoLinha(dados, tipo, chave) {
 }
 
 window.toggleSabado = function (ano, mes, dia) {
-    let chave = `sabado_aberto_${ano}_${mes}_${dia}`;
-    if (memoriaNuvem[chave]) { removerDaNuvem(chave); } else { salvarNaNuvem(chave, "1"); }
+    const chave = `sabado_aberto_${ano}_${mes}_${dia}`;
+    if (memoriaNuvem[chave]) {
+        removerDaNuvem(chave);
+    } else {
+        salvarNaNuvem(chave, "1");
+    }
     gerarFolha();
 };
 
 function alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero, celulaDiaHtml) {
-    let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-geral') || '0');
-    let novoEstado = (estadoAtual + 1) % 3;
+    const estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-geral') || '0');
+    const novoEstado = (estadoAtual + 1) % 3;
     linhaElemento.setAttribute('data-estado-geral', novoEstado);
     linhaElemento.setAttribute('data-estado-individual', '0');
 
-    let index = document.getElementById('seletor-servidor').value;
-    let nomeAtual = document.getElementById('servidor-nome').textContent;
-    let turnoAtual = index !== "" ? (bancoServidores[index].turno || "MANUAL") : "MANUAL";
-    let chave = `feriado_${ano}_${mes}_${diaNumero}`;
+    const turnoAtual = obterTurnoAtual();
+    const nomeAtual = obterNomeAtual();
+    const chave = `feriado_${ano}_${mes}_${diaNumero}`;
     removerDaNuvem(`ausencia_${nomeAtual}_${ano}_${mes}_${diaNumero}`);
 
     if (novoEstado === ESTADOS.NORMAL) {
-        linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + `<td></td>`;
+        linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + '<td></td>';
         removerDaNuvem(chave);
     } else {
-        let dadosAntigos = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : {};
-        let novoRotulo = (dadosAntigos.estado === novoEstado) ? (dadosAntigos.rotulo || "") : "";
-        let dados = { estado: novoEstado, motivo: dadosAntigos.motivo || "", rotulo: novoRotulo };
+        const dadosAntigos = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : {};
+        const novoRotulo = (dadosAntigos.estado === novoEstado) ? (dadosAntigos.rotulo || "") : "";
+        const dados = { estado: novoEstado, motivo: dadosAntigos.motivo || "", rotulo: novoRotulo };
 
         linhaElemento.innerHTML = celulaDiaHtml + obterConteudoLinha(dados, 'geral', chave);
         salvarNaNuvem(chave, JSON.stringify(dados));
@@ -351,122 +538,155 @@ function alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero, celulaDiaHtml)
 
 function alternarAusenciaIndividual(linhaElemento, ano, mes, diaNumero, evento, celulaDiaHtml) {
     evento.preventDefault();
-    let index = document.getElementById('seletor-servidor').value;
-    let nomeAtual = document.getElementById('servidor-nome').textContent;
-    let turnoAtual = index !== "" ? (bancoServidores[index].turno || "MANUAL") : "MANUAL";
+    const turnoAtual = obterTurnoAtual();
+    const nomeAtual = obterNomeAtual();
 
-    if (nomeAtual === "SELECIONE NA LISTA ACIMA" || nomeAtual === "") { alert("⚠️ Selecione um servidor primeiro."); return; }
+    if (nomeAtual === SERVIDOR_PADRAO.nome || nomeAtual === "") {
+        alert("⚠️ Selecione um servidor primeiro.");
+        return;
+    }
 
-    let estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-individual') || '0');
-    let novoEstado = (estadoAtual + 1) % 3;
+    const estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-individual') || '0');
+    const novoEstado = (estadoAtual + 1) % 3;
     linhaElemento.setAttribute('data-estado-individual', novoEstado);
 
-    let chave = `ausencia_${nomeAtual}_${ano}_${mes}_${diaNumero}`;
+    const chave = `ausencia_${nomeAtual}_${ano}_${mes}_${diaNumero}`;
 
     if (novoEstado === ESTADOS.NORMAL) {
-        let temFeriadoGeral = memoriaNuvem[`feriado_${ano}_${mes}_${diaNumero}`];
+        const temFeriadoGeral = memoriaNuvem[`feriado_${ano}_${mes}_${diaNumero}`];
         if (temFeriadoGeral) {
-            let dadosGeral = JSON.parse(temFeriadoGeral);
-            let chaveGeral = `feriado_${ano}_${mes}_${diaNumero}`;
+            const dadosGeral = JSON.parse(temFeriadoGeral);
+            const chaveGeral = `feriado_${ano}_${mes}_${diaNumero}`;
             linhaElemento.innerHTML = celulaDiaHtml + obterConteudoLinha(dadosGeral, 'geral', chaveGeral);
             linhaElemento.setAttribute('data-estado-geral', dadosGeral.estado);
         } else {
-            linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + `<td></td>`;
+            linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + '<td></td>';
             linhaElemento.setAttribute('data-estado-geral', '0');
         }
         removerDaNuvem(chave);
     } else {
-        let dadosAntigos = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : {};
-        let novoRotulo = (dadosAntigos.estado === novoEstado) ? (dadosAntigos.rotulo || "") : "";
-        let dados = { estado: novoEstado, motivo: dadosAntigos.motivo || "", rotulo: novoRotulo };
+        const dadosAntigos = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : {};
+        const novoRotulo = (dadosAntigos.estado === novoEstado) ? (dadosAntigos.rotulo || "") : "";
+        const dados = { estado: novoEstado, motivo: dadosAntigos.motivo || "", rotulo: novoRotulo };
 
         linhaElemento.innerHTML = celulaDiaHtml + obterConteudoLinha(dados, 'individual', chave);
         salvarNaNuvem(chave, JSON.stringify(dados));
     }
 }
 
+// --- Funções auxiliares para criação de linhas da tabela ---
+
+function criarLinhaDomingo(dia) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">DOMINGO</td>`;
+    return tr;
+}
+
+function criarLinhaSabado(dia, ano, mes, aberto) {
+    const tr = document.createElement('tr');
+    tr.className = "dia-util";
+
+    if (aberto) {
+        return null; // Sábado aberto é tratado como dia útil
+    }
+
+    tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana" style="color: #2B6CB0;">
+                <span class="esconder-impressao" style="text-decoration: underline; cursor: pointer;">SÁBADO (Clique para abrir)</span>
+                <span class="mostrar-impressao">SÁBADO</span>
+            </td>`;
+    tr.onclick = function () { toggleSabado(ano, mes, dia); };
+    return tr;
+}
+
+function criarLinhaDiaUtil(dia, ano, mes, turnoAtual, nomeAtual, isSabadoAberto) {
+    const tr = document.createElement('tr');
+    tr.className = "dia-util";
+    tr.setAttribute('tabindex', '0');
+    tr.setAttribute('role', 'button');
+
+    const chaveGeral = `feriado_${ano}_${mes}_${dia}`;
+    const chaveIndiv = `ausencia_${nomeAtual}_${ano}_${mes}_${dia}`;
+    const dadosGeral = memoriaNuvem[chaveGeral];
+    const dadosIndiv = memoriaNuvem[chaveIndiv];
+
+    let celulaDiaHtml = `<td>${dia}`;
+    if (isSabadoAberto) {
+        celulaDiaHtml += ` <span class="esconder-impressao" style="cursor: pointer; color: #e53e3e; font-size: 11px; font-weight: bold;" onclick="event.stopPropagation(); toggleSabado(${ano}, ${mes}, ${dia})" title="Fechar Sábado">⮌</span>`;
+    }
+    celulaDiaHtml += '</td>';
+
+    if (dadosIndiv) {
+        const info = JSON.parse(dadosIndiv);
+        tr.setAttribute('data-estado-individual', info.estado);
+        tr.innerHTML = celulaDiaHtml + obterConteudoLinha(info, 'individual', chaveIndiv);
+    } else if (dadosGeral) {
+        const info = JSON.parse(dadosGeral);
+        tr.setAttribute('data-estado-geral', info.estado);
+        tr.innerHTML = celulaDiaHtml + obterConteudoLinha(info, 'geral', chaveGeral);
+    } else {
+        tr.setAttribute('data-estado-geral', '0');
+        tr.setAttribute('data-estado-individual', '0');
+        tr.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + '<td></td>';
+    }
+
+    tr.onclick = function () { alternarFeriadoGeral(this, ano, mes, dia, celulaDiaHtml); };
+    tr.oncontextmenu = function (evento) { alternarAusenciaIndividual(this, ano, mes, dia, evento, celulaDiaHtml); };
+
+    return tr;
+}
+
 function gerarFolha() {
-    const selectMes = document.getElementById('mes');
+    const selectMes = DOM.selectMes();
     const mes = parseInt(selectMes.value);
     const nomeMes = selectMes.options[selectMes.selectedIndex].text;
-    const ano = parseInt(document.getElementById('ano').value);
+    const ano = parseInt(DOM.selectAno().value);
+    const turnoAtual = obterTurnoAtual();
+    const nomeAtual = obterNomeAtual();
 
-    const index = document.getElementById('seletor-servidor').value;
-    const nomeAtual = document.getElementById('servidor-nome').textContent;
-    const turnoAtual = index !== "" ? (bancoServidores[index].turno || "MANUAL") : "MANUAL";
+    DOM.tituloPeriodo().textContent = `Folha de Ponto - Período: ${nomeMes} ${ano}`;
 
-    document.getElementById('titulo-periodo').textContent = `Folha de Ponto - Período: ${nomeMes} ${ano}`;
-
-    const corpoTabela = document.getElementById('corpo-tabela');
+    const corpoTabela = DOM.corpoTabela();
     corpoTabela.innerHTML = '';
     const diasNoMes = new Date(ano, mes, 0).getDate();
 
     for (let dia = 1; dia <= diasNoMes; dia++) {
         const diaDaSemana = new Date(ano, mes - 1, dia).getDay();
-        const tr = document.createElement('tr');
-
-        let isSabadoAberto = memoriaNuvem[`sabado_aberto_${ano}_${mes}_${dia}`] === "1";
+        const isSabadoAberto = memoriaNuvem[`sabado_aberto_${ano}_${mes}_${dia}`] === "1";
+        let tr;
 
         if (diaDaSemana === 0) {
-            tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana">DOMINGO</td>`;
+            tr = criarLinhaDomingo(dia);
         } else if (diaDaSemana === 6 && !isSabadoAberto) {
-            tr.className = "dia-util";
-            tr.innerHTML = `<td>${dia}</td><td colspan="5" class="fim-de-semana" style="color: #2B6CB0;">
-                        <span class="esconder-impressao" style="text-decoration: underline; cursor: pointer;">SÁBADO (Clique para abrir)</span>
-                        <span class="mostrar-impressao">SÁBADO</span>
-                    </td>`;
-            tr.onclick = function () { toggleSabado(ano, mes, dia); };
+            tr = criarLinhaSabado(dia, ano, mes, false);
         } else {
-            tr.className = "dia-util";
-            tr.setAttribute('tabindex', '0');
-            tr.setAttribute('role', 'button');
-
-            let chaveGeral = `feriado_${ano}_${mes}_${dia}`;
-            let chaveIndiv = `ausencia_${nomeAtual}_${ano}_${mes}_${dia}`;
-            let dadosGeral = memoriaNuvem[chaveGeral];
-            let dadosIndiv = memoriaNuvem[chaveIndiv];
-
-            let celulaDiaHtml = `<td>${dia}`;
-            if (diaDaSemana === 6 && isSabadoAberto) {
-                celulaDiaHtml += ` <span class="esconder-impressao" style="cursor: pointer; color: #e53e3e; font-size: 11px; font-weight: bold;" onclick="event.stopPropagation(); toggleSabado(${ano}, ${mes}, ${dia})" title="Fechar Sábado">⮌</span>`;
-            }
-            celulaDiaHtml += `</td>`;
-
-            if (dadosIndiv) {
-                let info = JSON.parse(dadosIndiv);
-                tr.setAttribute('data-estado-individual', info.estado);
-                tr.innerHTML = celulaDiaHtml + obterConteudoLinha(info, 'individual', chaveIndiv);
-            } else if (dadosGeral) {
-                let info = JSON.parse(dadosGeral);
-                tr.setAttribute('data-estado-geral', info.estado);
-                tr.innerHTML = celulaDiaHtml + obterConteudoLinha(info, 'geral', chaveGeral);
-            } else {
-                tr.setAttribute('data-estado-geral', '0');
-                tr.setAttribute('data-estado-individual', '0');
-                tr.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + `<td></td>`;
-            }
-
-            tr.onclick = function () { alternarFeriadoGeral(this, ano, mes, dia, celulaDiaHtml); };
-            tr.oncontextmenu = function (evento) { alternarAusenciaIndividual(this, ano, mes, dia, evento, celulaDiaHtml); };
+            tr = criarLinhaDiaUtil(dia, ano, mes, turnoAtual, nomeAtual, diaDaSemana === 6 && isSabadoAberto);
         }
-        corpoTabela.appendChild(tr);
+
+        if (tr) corpoTabela.appendChild(tr);
     }
 }
 
+// ============================================================
+// EXPORTAÇÃO E IMPORTAÇÃO
+// ============================================================
+
 function exportarExcel() {
-    if (bancoServidores.length === 0) { alert("A lista de servidores está vazia!"); return; }
+    if (bancoServidores.length === 0) {
+        alert("A lista de servidores está vazia!");
+        return;
+    }
 
     let csv = '\uFEFF';
     csv += "NOME;CPF;CARGO;SETOR;TURNO\n";
 
     bancoServidores.forEach(s => {
-        let turnoFormatado = s.turno || "MANUAL";
+        const turnoFormatado = s.turno || TURNOS.MANUAL;
         csv += `${s.nome};${s.cpf};${s.cargo};${s.categoria};${turnoFormatado}\n`;
     });
 
-    let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    let link = document.createElement("a");
-    let url = URL.createObjectURL(blob);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
     link.setAttribute("download", "RH_Servidores_CMEI.csv");
     document.body.appendChild(link);
@@ -474,48 +694,8 @@ function exportarExcel() {
     link.remove();
 }
 
-function imprimirTodosLote() {
-    if (bancoServidores.length === 0) { alert("A lista de servidores está vazia!"); return; }
-
-    const filtroSetor = document.getElementById('filtro-setor').value;
-    const servidoresFiltrados = bancoServidores.filter(s => filtroSetor === "TODOS" || (s.categoria || "D - EQUIPE DE APOIO") === filtroSetor);
-    if (servidoresFiltrados.length === 0) { alert("Nenhum servidor encontrado neste setor!"); return; }
-
-    mostrarCarregamento("🖨️ Preparando impressões em lote...");
-    let indiceOriginal = document.getElementById('seletor-servidor').value;
-    const printWrapper = document.getElementById('print-wrapper');
-    printWrapper.innerHTML = '';
-    document.body.classList.add('modo-lote');
-
-    for (let i = 0; i < bancoServidores.length; i++) {
-        let servidor = bancoServidores[i];
-        let categoriaServidor = servidor.categoria || "D - EQUIPE DE APOIO";
-
-        if (filtroSetor === "TODOS" || categoriaServidor === filtroSetor) {
-            document.getElementById('seletor-servidor').value = i;
-            preencherServidor();
-            let cloneArea = document.getElementById('folha-impressao').cloneNode(true);
-            cloneArea.removeAttribute('id');
-            cloneArea.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
-            cloneArea.classList.add('quebra-pagina');
-            printWrapper.appendChild(cloneArea);
-        }
-    }
-
-    setTimeout(() => { window.print(); esconderCarregamento(); }, 500);
-
-    window.onafterprint = function () {
-        document.body.classList.remove('modo-lote');
-        printWrapper.innerHTML = '';
-        document.getElementById('seletor-servidor').value = indiceOriginal || "";
-        preencherServidor();
-        gerarFolha();
-        window.onafterprint = null;
-    };
-}
-
 function exportarBackup() {
-    let link = document.createElement("a");
+    const link = document.createElement("a");
     link.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(memoriaNuvem)));
     link.setAttribute("download", "backup_escola_pontos.json");
     document.body.appendChild(link);
@@ -524,15 +704,173 @@ function exportarBackup() {
 }
 
 function importarBackup(evento) {
-    let ficheiro = evento.target.files[0];
+    const ficheiro = evento.target.files[0];
     if (!ficheiro) return;
-    let leitor = new FileReader();
+
+    const leitor = new FileReader();
     leitor.onload = function (e) {
         try {
-            let dados = JSON.parse(e.target.result);
-            database.ref('cmei_dados').set(dados).then(() => { alert("✅ Backup restaurado!"); location.reload(); });
-        } catch (err) { alert("❌ Arquivo inválido!"); }
+            const dados = JSON.parse(e.target.result);
+            database.ref('cmei_dados').set(dados)
+                .then(() => {
+                    alert("✅ Backup restaurado!");
+                    location.reload();
+                })
+                .catch((err) => {
+                    console.error("Erro ao restaurar backup:", err);
+                    alert("❌ Erro ao salvar no banco de dados!");
+                });
+        } catch (err) {
+            console.error("Erro ao ler arquivo de backup:", err);
+            alert("❌ Arquivo inválido! Certifique-se de que é um JSON válido.");
+        }
     };
     leitor.readAsText(ficheiro);
     evento.target.value = "";
 }
+
+// ============================================================
+// IMPRESSÃO EM LOTE
+// ============================================================
+
+function filtrarServidoresPorSetor(filtroSetor) {
+    return bancoServidores.filter(s =>
+        filtroSetor === "TODOS" || (s.categoria || CATEGORIAS.APOIO) === filtroSetor
+    );
+}
+
+function imprimirTodosLote() {
+    if (bancoServidores.length === 0) {
+        alert("A lista de servidores está vazia!");
+        return;
+    }
+
+    const filtroSetor = DOM.filtroSetor().value;
+    const servidoresFiltrados = filtrarServidoresPorSetor(filtroSetor);
+
+    if (servidoresFiltrados.length === 0) {
+        alert("Nenhum servidor encontrado neste setor!");
+        return;
+    }
+
+    mostrarCarregamento("🖨️ Preparando impressões em lote...");
+    const indiceOriginal = DOM.seletorServidor().value;
+    const printWrapper = DOM.printWrapper();
+    printWrapper.innerHTML = '';
+    document.body.classList.add('modo-lote');
+
+    for (let i = 0; i < bancoServidores.length; i++) {
+        const categoriaServidor = bancoServidores[i].categoria || CATEGORIAS.APOIO;
+
+        if (filtroSetor === "TODOS" || categoriaServidor === filtroSetor) {
+            DOM.seletorServidor().value = i;
+            preencherServidor();
+            const cloneArea = DOM.folhaImpressao().cloneNode(true);
+            cloneArea.removeAttribute('id');
+            cloneArea.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+            cloneArea.classList.add('quebra-pagina');
+            printWrapper.appendChild(cloneArea);
+        }
+    }
+
+    setTimeout(() => {
+        window.print();
+        esconderCarregamento();
+    }, 500);
+
+    window.onafterprint = function () {
+        document.body.classList.remove('modo-lote');
+        printWrapper.innerHTML = '';
+        DOM.seletorServidor().value = indiceOriginal || "";
+        preencherServidor();
+        gerarFolha();
+        window.onafterprint = null;
+    };
+}
+
+// ============================================================
+// EVENT LISTENERS (registrados via JS ao invés de inline HTML)
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', function () {
+    // --- index.html elements ---
+    const btnImprimir = document.querySelector('.btn-imprimir');
+    if (btnImprimir) btnImprimir.addEventListener('click', () => window.print());
+
+    const btnLote = document.querySelector('.btn-lote');
+    if (btnLote) btnLote.addEventListener('click', imprimirTodosLote);
+
+    const btnSair = document.querySelector('.btn-sair');
+    if (btnSair) btnSair.addEventListener('click', fazerLogout);
+
+    const btnBackup = document.querySelector('.topo-avancado .btn-backup');
+    if (btnBackup) btnBackup.addEventListener('click', revelarBackup);
+
+    const btnExcel = document.querySelector('.btn-excel');
+    if (btnExcel) btnExcel.addEventListener('click', exportarExcel);
+
+    const btnExportBackup = document.querySelector('#painel-secreto .btn-backup');
+    if (btnExportBackup) btnExportBackup.addEventListener('click', exportarBackup);
+
+    const btnRestaurar = document.querySelector('#painel-secreto .btn-add');
+    if (btnRestaurar) btnRestaurar.addEventListener('click', () => DOM.fileImport().click());
+
+    const fileImport = DOM.fileImport();
+    if (fileImport) fileImport.addEventListener('change', importarBackup);
+
+    // Seletor de servidor
+    const seletorServidor = DOM.seletorServidor();
+    if (seletorServidor) seletorServidor.addEventListener('change', preencherServidor);
+
+    // Seletor de turno
+    const seletorTurno = DOM.seletorTurno();
+    if (seletorTurno) seletorTurno.addEventListener('change', atualizarTurno);
+
+    // Seletores de mês e ano
+    const selectMes = DOM.selectMes();
+    if (selectMes) selectMes.addEventListener('change', gerarFolha);
+
+    const selectAno = DOM.selectAno();
+    if (selectAno) selectAno.addEventListener('change', gerarFolha);
+
+    // Modal de cadastro
+    const btnAddServidor = document.querySelector('.grupo-seletor-moderno .btn-add');
+    if (btnAddServidor) btnAddServidor.addEventListener('click', abrirModal);
+
+    const btnDelServidor = document.querySelector('.grupo-seletor-moderno .btn-del');
+    if (btnDelServidor) btnDelServidor.addEventListener('click', removerServidor);
+
+    const btnSalvarModal = document.querySelector('#modalAdd .btn-add');
+    if (btnSalvarModal) btnSalvarModal.addEventListener('click', salvarNovoServidor);
+
+    const btnCancelarModal = document.querySelector('#modalAdd .btn-cancelar');
+    if (btnCancelarModal) btnCancelarModal.addEventListener('click', fecharModal);
+
+    // Campos com comportamento uppercase
+    const novoNome = DOM.novoNome();
+    if (novoNome) novoNome.addEventListener('input', function () { this.value = this.value.toUpperCase(); });
+
+    const novoCargo = DOM.novoCargo();
+    if (novoCargo) novoCargo.addEventListener('input', function () { this.value = this.value.toUpperCase(); });
+
+    const novoCpf = DOM.novoCpf();
+    if (novoCpf) novoCpf.addEventListener('input', function () { mascaraCPF(this); });
+
+    // CPF editável na ficha
+    const servidorCpf = DOM.servidorCpf();
+    if (servidorCpf) servidorCpf.addEventListener('input', function () { mascaraCPF(this); });
+
+    // Logo duplo clique -> admin
+    const logo = document.querySelector('.cabecalho-logo');
+    if (logo) logo.addEventListener('dblclick', revelarBackup);
+
+    // --- login.html elements ---
+    const btnLogin = document.querySelector('.btn-login-gradient');
+    if (btnLogin) btnLogin.addEventListener('click', fazerLogin);
+
+    const loginEmail = DOM.loginEmail();
+    if (loginEmail) loginEmail.addEventListener('keypress', (e) => { if (e.key === 'Enter') fazerLogin(); });
+
+    const loginSenha = DOM.loginSenha();
+    if (loginSenha) loginSenha.addEventListener('keypress', (e) => { if (e.key === 'Enter') fazerLogin(); });
+});
