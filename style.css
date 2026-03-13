@@ -209,6 +209,11 @@
             gap: 8px;
         }
 
+        .grupo-seletor-moderno select {
+            flex: 1;
+            min-width: 320px;
+        }
+
         .grupo-seletor {
             display: flex;
             gap: 5px;

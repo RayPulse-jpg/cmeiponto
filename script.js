@@ -431,7 +431,7 @@ function organizarEOrdenarServidores() {
 
 function carregarListaServidores(filtroTexto = '') {
     const seletor = DOM.seletorServidor();
-    seletor.innerHTML = '<option value="">-- Selecione ou Digite Abaixo --</option>';
+    seletor.innerHTML = '<option value="">-- Selecione ou Digite Acima--</option>';
     organizarEOrdenarServidores();
 
     const filtro = filtroTexto.toUpperCase().trim();
