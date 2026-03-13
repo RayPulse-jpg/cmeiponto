@@ -3,16 +3,106 @@
            ============================================================ */
         :root {
             --primary-color: #6366f1;
-            /* Indigo */
             --primary-hover: #4f46e5;
             --secondary-color: #ec4899;
-            /* Pink */
             --bg-gradient-start: #f0f4ff;
             --bg-gradient-end: #ffffff;
             --card-bg: rgba(255, 255, 255, 0.9);
             --text-main: #1e293b;
             --text-muted: #64748b;
             --border-light: #cbd5e1;
+            --folha-bg: #ffffff;
+            --folha-border: #f1f5f9;
+            --table-header-bg: #f0f0f0;
+            --table-border: #000;
+            --fim-de-semana-bg: #e2e8f0;
+            --modal-bg: white;
+            --input-bg: white;
+            --hover-bg: #edf2f7;
+        }
+
+        /* MODO ESCURO */
+        [data-theme="dark"] {
+            --bg-gradient-start: #0f172a;
+            --bg-gradient-end: #1e293b;
+            --card-bg: rgba(30, 41, 59, 0.95);
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --border-light: #334155;
+            --folha-bg: #1e293b;
+            --folha-border: #334155;
+            --table-header-bg: #334155;
+            --table-border: #475569;
+            --fim-de-semana-bg: #334155;
+            --modal-bg: #1e293b;
+            --input-bg: #0f172a;
+            --hover-bg: #334155;
+        }
+
+        [data-theme="dark"] select,
+        [data-theme="dark"] input {
+            background-color: var(--input-bg);
+            color: var(--text-main);
+            border-color: var(--border-light);
+        }
+
+        [data-theme="dark"] .folha-container {
+            background-color: var(--folha-bg);
+            border-color: var(--folha-border);
+        }
+
+        [data-theme="dark"] .tabela-info td,
+        [data-theme="dark"] .tabela-ponto th,
+        [data-theme="dark"] .tabela-ponto td {
+            border-color: var(--table-border);
+        }
+
+        [data-theme="dark"] .tabela-ponto th {
+            background-color: var(--table-header-bg);
+            color: var(--text-main);
+        }
+
+        [data-theme="dark"] .fim-de-semana {
+            background-color: var(--fim-de-semana-bg);
+            color: var(--text-muted);
+        }
+
+        [data-theme="dark"] .dia-util:hover {
+            background-color: var(--hover-bg);
+        }
+
+        [data-theme="dark"] .editavel {
+            background-color: #2d3748;
+            color: var(--text-main);
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: var(--modal-bg);
+            color: var(--text-main);
+        }
+
+        [data-theme="dark"] .modal-content h3 {
+            color: var(--text-main);
+        }
+
+        [data-theme="dark"] .destaque {
+            background-color: #1e3a5f;
+            border-color: #3b82f6;
+        }
+
+        [data-theme="dark"] .destaque-turno {
+            background-color: #2d1b69;
+            border-color: #8b5cf6;
+        }
+
+        [data-theme="dark"] .linha-individual {
+            background-color: #44370a;
+            color: #fef08a;
+        }
+
+        [data-theme="dark"] .linha-assinatura {
+            border-top-color: var(--table-border);
+            color: var(--text-main);
         }
 
         /* ============================================================
@@ -877,4 +967,232 @@
                 color: #000 !important;
                 font-weight: bold;
             }
+
+            .toast-container,
+            .status-nuvem,
+            #busca-servidor,
+            .resumo-folha,
+            .tooltip-estado,
+            #btn-desfazer,
+            #btn-tema {
+                display: none !important;
+            }
+        }
+
+        /* ============================================================
+           1. TOAST NOTIFICATIONS
+           ============================================================ */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+            transform: translateX(120%);
+            opacity: 0;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+            max-width: 380px;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast-visivel {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast-saindo {
+            transform: translateX(120%);
+            opacity: 0;
+        }
+
+        .toast-sucesso { background: linear-gradient(135deg, #10b981, #059669); }
+        .toast-erro { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .toast-aviso { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .toast-info { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+
+        .toast-msg { flex: 1; }
+
+        .toast-fechar {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .toast-fechar:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        /* ============================================================
+           2. INDICADOR DE SALVAMENTO NA NUVEM
+           ============================================================ */
+        .status-nuvem {
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .status-nuvem.salvando {
+            color: #fbbf24;
+            animation: pulsar 1s ease-in-out infinite;
+        }
+
+        .status-nuvem.salvo {
+            color: #10b981;
+        }
+
+        @keyframes pulsar {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ============================================================
+           3. BUSCA DE SERVIDOR
+           ============================================================ */
+        #busca-servidor {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-main);
+            background-color: var(--input-bg, white);
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+        }
+
+        #busca-servidor:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        /* ============================================================
+           4. CONTADOR DE RESUMO
+           ============================================================ */
+        .resumo-folha {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin: 15px 0 5px 0;
+            padding: 10px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-util { background: #dbeafe; color: #1e40af; }
+        .badge-feriado { background: #fef3c7; color: #92400e; }
+        .badge-falta { background: #fce7f3; color: #9d174d; }
+        .badge-atestado { background: #d1fae5; color: #065f46; }
+        .badge-domingo { background: #fee2e2; color: #991b1b; }
+        .badge-sabado { background: #dbeafe; color: #1e3a8a; }
+
+        [data-theme="dark"] .badge-util { background: #1e3a5f; color: #93c5fd; }
+        [data-theme="dark"] .badge-feriado { background: #451a03; color: #fde68a; }
+        [data-theme="dark"] .badge-falta { background: #500724; color: #fbcfe8; }
+        [data-theme="dark"] .badge-atestado { background: #064e3b; color: #a7f3d0; }
+        [data-theme="dark"] .badge-domingo { background: #450a0a; color: #fca5a5; }
+        [data-theme="dark"] .badge-sabado { background: #172554; color: #93c5fd; }
+
+        /* ============================================================
+           5. TOOLTIP DE CONFIRMAÇÃO VISUAL
+           ============================================================ */
+        .tooltip-estado {
+            position: absolute;
+            top: -32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(8px);
+            background: #1e293b;
+            color: white;
+            padding: 5px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 500;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .tooltip-estado::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px 5px 0 5px;
+            border-style: solid;
+            border-color: #1e293b transparent transparent transparent;
+        }
+
+        .tooltip-visivel {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ============================================================
+           BOTÕES DO TOPO (Desfazer, Tema)
+           ============================================================ */
+        .btn-acao-topo {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.2s;
+        }
+
+        .btn-acao-topo:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
         }

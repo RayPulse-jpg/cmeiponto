@@ -31,6 +31,10 @@ const SERVIDOR_PADRAO = {
     cargo: "..."
 };
 
+const TIMEOUT_INATIVIDADE = 30 * 60 * 1000; // 30 minutos
+const AVISO_INATIVIDADE = 25 * 60 * 1000;   // aviso aos 25 min
+const MAX_HISTORICO = 20;
+
 // ============================================================
 // CACHE DE SELETORES DOM (lazy getters)
 // ============================================================
@@ -52,6 +56,10 @@ const DOM = {
     printWrapper: () => document.getElementById('print-wrapper'),
     folhaImpressao: () => document.getElementById('folha-impressao'),
     fileImport: () => document.getElementById('file-import'),
+    toastContainer: () => document.getElementById('toast-container'),
+    statusNuvem: () => document.getElementById('status-nuvem'),
+    buscaServidor: () => document.getElementById('busca-servidor'),
+    resumoFolha: () => document.getElementById('resumo-folha'),
     // Campos do modal
     novoNome: () => document.getElementById('novo-nome'),
     novoCpf: () => document.getElementById('novo-cpf'),
@@ -94,6 +102,10 @@ const auth = firebase.auth();
 
 let memoriaNuvem = {};
 let bancoServidores = [];
+let historicoAcoes = []; // Pilha para Ctrl+Z
+let timerInatividade = null;
+let timerAvisoInatividade = null;
+let salvamentoTimeout = null;
 
 // ============================================================
 // FUNÇÕES UTILITÁRIAS
@@ -133,6 +145,57 @@ function obterNomeAtual() {
 }
 
 // ============================================================
+// 1. SISTEMA DE TOAST (substitui alert())
+// ============================================================
+
+function mostrarToast(mensagem, tipo = 'info', duracao = 3500) {
+    const container = DOM.toastContainer();
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${tipo}`;
+    toast.innerHTML = `<span class="toast-msg">${mensagem}</span><button class="toast-fechar" aria-label="Fechar">✕</button>`;
+    container.appendChild(toast);
+
+    // Trigger animation
+    requestAnimationFrame(() => toast.classList.add('toast-visivel'));
+
+    const remover = () => {
+        toast.classList.remove('toast-visivel');
+        toast.classList.add('toast-saindo');
+        setTimeout(() => toast.remove(), 300);
+    };
+
+    toast.querySelector('.toast-fechar').addEventListener('click', remover);
+    setTimeout(remover, duracao);
+}
+
+// ============================================================
+// 2. INDICADOR DE SALVAMENTO NA NUVEM
+// ============================================================
+
+function mostrarSalvando() {
+    const el = DOM.statusNuvem();
+    if (!el) return;
+    el.textContent = '☁️ Salvando...';
+    el.classList.add('salvando');
+    el.classList.remove('salvo');
+}
+
+function mostrarSalvo() {
+    const el = DOM.statusNuvem();
+    if (!el) return;
+    el.textContent = '✅ Salvo';
+    el.classList.remove('salvando');
+    el.classList.add('salvo');
+    clearTimeout(salvamentoTimeout);
+    salvamentoTimeout = setTimeout(() => {
+        el.textContent = '☁️';
+        el.classList.remove('salvo');
+    }, 2500);
+}
+
+// ============================================================
 // CARREGAMENTO / UI
 // ============================================================
 
@@ -164,8 +227,10 @@ auth.onAuthStateChanged((user) => {
             if (telaLogin) telaLogin.style.display = 'none';
             mostrarCarregamento();
             carregarDadosDaNuvem();
+            iniciarTimerInatividade();
         }
     } else {
+        pararTimerInatividade();
         if (!isLoginPage) {
             window.location.href = 'login.html';
         } else {
@@ -204,12 +269,47 @@ function fazerLogin() {
 }
 
 function fazerLogout() {
+    pararTimerInatividade();
     auth.signOut().then(() => {
         memoriaNuvem = {};
         bancoServidores = [];
+        historicoAcoes = [];
         const inputSenha = DOM.loginSenha();
         if (inputSenha) inputSenha.value = '';
     });
+}
+
+// ============================================================
+// 7. AUTO-LOGOUT POR INATIVIDADE
+// ============================================================
+
+function iniciarTimerInatividade() {
+    if (isLoginPage) return;
+    resetarTimerInatividade();
+
+    const eventos = ['mousemove', 'keypress', 'click', 'touchstart', 'scroll'];
+    eventos.forEach(ev => document.addEventListener(ev, resetarTimerInatividade, { passive: true }));
+}
+
+function pararTimerInatividade() {
+    clearTimeout(timerInatividade);
+    clearTimeout(timerAvisoInatividade);
+    timerInatividade = null;
+    timerAvisoInatividade = null;
+}
+
+function resetarTimerInatividade() {
+    clearTimeout(timerInatividade);
+    clearTimeout(timerAvisoInatividade);
+
+    timerAvisoInatividade = setTimeout(() => {
+        mostrarToast("⏳ Sessão expira em 5 minutos por inatividade", "aviso", 10000);
+    }, AVISO_INATIVIDADE);
+
+    timerInatividade = setTimeout(() => {
+        mostrarToast("🔒 Sessão encerrada por inatividade", "erro", 5000);
+        setTimeout(() => fazerLogout(), 1500);
+    }, TIMEOUT_INATIVIDADE);
 }
 
 // ============================================================
@@ -218,12 +318,24 @@ function fazerLogout() {
 
 function salvarNaNuvem(chave, valor) {
     memoriaNuvem[chave] = valor;
-    database.ref('cmei_dados/' + chave).set(valor);
+    mostrarSalvando();
+    database.ref('cmei_dados/' + chave).set(valor)
+        .then(() => mostrarSalvo())
+        .catch(() => {
+            const el = DOM.statusNuvem();
+            if (el) { el.textContent = '❌ Erro'; el.classList.remove('salvando'); }
+        });
 }
 
 function removerDaNuvem(chave) {
     delete memoriaNuvem[chave];
-    database.ref('cmei_dados/' + chave).remove();
+    mostrarSalvando();
+    database.ref('cmei_dados/' + chave).remove()
+        .then(() => mostrarSalvo())
+        .catch(() => {
+            const el = DOM.statusNuvem();
+            if (el) { el.textContent = '❌ Erro'; el.classList.remove('salvando'); }
+        });
 }
 
 /**
@@ -282,7 +394,7 @@ function carregarDadosDaNuvem() {
         })
         .catch((err) => {
             console.error("Erro ao conectar no banco de dados:", err);
-            alert("Erro ao conectar no banco de dados. Verifique sua conexão.");
+            mostrarToast("❌ Erro ao conectar no banco de dados. Verifique sua conexão.", "erro", 6000);
             esconderCarregamento();
         });
 }
@@ -297,7 +409,7 @@ function revelarBackup() {
     painel.classList.toggle('hidden');
     if (estaOculto) {
         painel.style.display = 'flex';
-        alert("🔓 Modo Administrador ativado!");
+        mostrarToast("🔓 Modo Administrador ativado!", "info");
     } else {
         painel.style.display = '';
     }
@@ -317,15 +429,19 @@ function organizarEOrdenarServidores() {
     });
 }
 
-function carregarListaServidores() {
+function carregarListaServidores(filtroTexto = '') {
     const seletor = DOM.seletorServidor();
     seletor.innerHTML = '<option value="">-- Selecione ou Digite Abaixo --</option>';
     organizarEOrdenarServidores();
 
+    const filtro = filtroTexto.toUpperCase().trim();
     let categoriaAtual = "";
     let optGroupAtual = null;
 
     bancoServidores.forEach((servidor, index) => {
+        // Filtro de busca por nome
+        if (filtro && !servidor.nome.includes(filtro)) return;
+
         const cat = servidor.categoria || CATEGORIAS.APOIO;
         if (cat !== categoriaAtual) {
             categoriaAtual = cat;
@@ -420,15 +536,15 @@ function salvarNovoServidor() {
     const turno = DOM.novoTurno().value;
 
     if (!nome || !cpf || !cargo || !categoria) {
-        alert("Preencha todos os campos e selecione o Setor!");
+        mostrarToast("⚠️ Preencha todos os campos e selecione o Setor!", "aviso");
         return;
     }
     if (!cpfBasicoValido(cpf)) {
-        alert("CPF inválido (deve conter 11 dígitos).");
+        mostrarToast("⚠️ CPF inválido (deve conter 11 dígitos).", "aviso");
         return;
     }
     if (bancoServidores.some(s => s.cpf === cpf || s.nome === nome)) {
-        alert("❌ Erro: Já existe um servidor com este Nome ou CPF!");
+        mostrarToast("❌ Já existe um servidor com este Nome ou CPF!", "erro");
         return;
     }
 
@@ -441,20 +557,54 @@ function salvarNovoServidor() {
     const novaPosicao = bancoServidores.findIndex(s => s.cpf === cpf);
     DOM.seletorServidor().value = novaPosicao;
     preencherServidor();
+    mostrarToast(`✅ ${nome} cadastrado com sucesso!`, "sucesso");
 }
 
 function removerServidor() {
     const index = DOM.seletorServidor().value;
     if (index === "") {
-        alert("⚠️ Selecione um servidor na lista para remover.");
+        mostrarToast("⚠️ Selecione um servidor na lista para remover.", "aviso");
         return;
     }
     if (confirm(`Remover ${bancoServidores[index].nome} permanentemente?`)) {
+        const nomeRemovido = bancoServidores[index].nome;
         bancoServidores.splice(index, 1);
         salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
         carregarListaServidores();
         preencherServidor();
+        mostrarToast(`🗑️ ${nomeRemovido} removido.`, "info");
     }
+}
+
+// ============================================================
+// 6. DESFAZER ÚLTIMA AÇÃO (Ctrl+Z)
+// ============================================================
+
+function registrarAcao(chave, valorAnterior) {
+    historicoAcoes.push({ chave, valorAnterior, timestamp: Date.now() });
+    if (historicoAcoes.length > MAX_HISTORICO) {
+        historicoAcoes.shift();
+    }
+}
+
+function desfazerUltimaAcao() {
+    if (historicoAcoes.length === 0) {
+        mostrarToast("ℹ️ Nenhuma ação para desfazer.", "info");
+        return;
+    }
+
+    const acao = historicoAcoes.pop();
+
+    if (acao.valorAnterior === undefined || acao.valorAnterior === null) {
+        // O valor não existia antes — remover
+        removerDaNuvem(acao.chave);
+    } else {
+        // Restaurar o valor anterior
+        salvarNaNuvem(acao.chave, acao.valorAnterior);
+    }
+
+    gerarFolha();
+    mostrarToast("↩️ Última ação desfeita!", "sucesso");
 }
 
 // ============================================================
@@ -504,6 +654,7 @@ function obterConteudoLinha(dados, tipo, chave) {
 
 window.toggleSabado = function (ano, mes, dia) {
     const chave = `sabado_aberto_${ano}_${mes}_${dia}`;
+    registrarAcao(chave, memoriaNuvem[chave] || null);
     if (memoriaNuvem[chave]) {
         removerDaNuvem(chave);
     } else {
@@ -511,6 +662,39 @@ window.toggleSabado = function (ano, mes, dia) {
     }
     gerarFolha();
 };
+
+// ============================================================
+// 5. TOOLTIP DE CONFIRMAÇÃO VISUAL
+// ============================================================
+
+function mostrarTooltip(elemento, texto) {
+    // Remove tooltip anterior se existir
+    const antigo = document.querySelector('.tooltip-estado');
+    if (antigo) antigo.remove();
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tooltip-estado';
+    tooltip.textContent = texto;
+
+    elemento.style.position = 'relative';
+    elemento.appendChild(tooltip);
+
+    requestAnimationFrame(() => tooltip.classList.add('tooltip-visivel'));
+
+    setTimeout(() => {
+        tooltip.classList.remove('tooltip-visivel');
+        setTimeout(() => tooltip.remove(), 300);
+    }, 1800);
+}
+
+function obterTextoEstado(novoEstado, tipo) {
+    if (novoEstado === ESTADOS.NORMAL) return '✓ Normal';
+    if (tipo === 'geral') {
+        return novoEstado === ESTADOS.JUSTIFICADA ? '🏖️ Feriado/Recesso' : '📋 Ponto Facultativo';
+    } else {
+        return novoEstado === ESTADOS.JUSTIFICADA ? '📝 Falta Justificada' : '🏥 Atestado Médico';
+    }
+}
 
 function alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero, celulaDiaHtml) {
     const estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-geral') || '0');
@@ -521,7 +705,13 @@ function alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero, celulaDiaHtml)
     const turnoAtual = obterTurnoAtual();
     const nomeAtual = obterNomeAtual();
     const chave = `feriado_${ano}_${mes}_${diaNumero}`;
-    removerDaNuvem(`ausencia_${nomeAtual}_${ano}_${mes}_${diaNumero}`);
+    const chaveAusencia = `ausencia_${nomeAtual}_${ano}_${mes}_${diaNumero}`;
+
+    // Registrar para desfazer
+    registrarAcao(chave, memoriaNuvem[chave] || null);
+    registrarAcao(chaveAusencia, memoriaNuvem[chaveAusencia] || null);
+
+    removerDaNuvem(chaveAusencia);
 
     if (novoEstado === ESTADOS.NORMAL) {
         linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + '<td></td>';
@@ -534,6 +724,10 @@ function alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero, celulaDiaHtml)
         linhaElemento.innerHTML = celulaDiaHtml + obterConteudoLinha(dados, 'geral', chave);
         salvarNaNuvem(chave, JSON.stringify(dados));
     }
+
+    // Tooltip visual
+    mostrarTooltip(linhaElemento, obterTextoEstado(novoEstado, 'geral'));
+    atualizarResumo();
 }
 
 function alternarAusenciaIndividual(linhaElemento, ano, mes, diaNumero, evento, celulaDiaHtml) {
@@ -542,7 +736,7 @@ function alternarAusenciaIndividual(linhaElemento, ano, mes, diaNumero, evento, 
     const nomeAtual = obterNomeAtual();
 
     if (nomeAtual === SERVIDOR_PADRAO.nome || nomeAtual === "") {
-        alert("⚠️ Selecione um servidor primeiro.");
+        mostrarToast("⚠️ Selecione um servidor primeiro.", "aviso");
         return;
     }
 
@@ -551,6 +745,9 @@ function alternarAusenciaIndividual(linhaElemento, ano, mes, diaNumero, evento, 
     linhaElemento.setAttribute('data-estado-individual', novoEstado);
 
     const chave = `ausencia_${nomeAtual}_${ano}_${mes}_${diaNumero}`;
+
+    // Registrar para desfazer
+    registrarAcao(chave, memoriaNuvem[chave] || null);
 
     if (novoEstado === ESTADOS.NORMAL) {
         const temFeriadoGeral = memoriaNuvem[`feriado_${ano}_${mes}_${diaNumero}`];
@@ -572,6 +769,10 @@ function alternarAusenciaIndividual(linhaElemento, ano, mes, diaNumero, evento, 
         linhaElemento.innerHTML = celulaDiaHtml + obterConteudoLinha(dados, 'individual', chave);
         salvarNaNuvem(chave, JSON.stringify(dados));
     }
+
+    // Tooltip visual
+    mostrarTooltip(linhaElemento, obterTextoEstado(novoEstado, 'individual'));
+    atualizarResumo();
 }
 
 // --- Funções auxiliares para criação de linhas da tabela ---
@@ -664,6 +865,64 @@ function gerarFolha() {
 
         if (tr) corpoTabela.appendChild(tr);
     }
+
+    atualizarResumo();
+}
+
+// ============================================================
+// 4. CONTADOR DE RESUMO
+// ============================================================
+
+function atualizarResumo() {
+    const el = DOM.resumoFolha();
+    if (!el) return;
+
+    const selectMes = DOM.selectMes();
+    const mes = parseInt(selectMes.value);
+    const ano = parseInt(DOM.selectAno().value);
+    const nomeAtual = obterNomeAtual();
+    const diasNoMes = new Date(ano, mes, 0).getDate();
+
+    let diasUteis = 0;
+    let domingos = 0;
+    let sabados = 0;
+    let feriadosGerais = 0;
+    let faltasJustificadas = 0;
+    let atestados = 0;
+
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+        const diaDaSemana = new Date(ano, mes - 1, dia).getDay();
+        const isSabadoAberto = memoriaNuvem[`sabado_aberto_${ano}_${mes}_${dia}`] === "1";
+
+        if (diaDaSemana === 0) {
+            domingos++;
+        } else if (diaDaSemana === 6 && !isSabadoAberto) {
+            sabados++;
+        } else {
+            // Verificar ausências individuais
+            const chaveIndiv = `ausencia_${nomeAtual}_${ano}_${mes}_${dia}`;
+            const chaveGeral = `feriado_${ano}_${mes}_${dia}`;
+
+            if (memoriaNuvem[chaveIndiv]) {
+                const dados = JSON.parse(memoriaNuvem[chaveIndiv]);
+                if (dados.estado === ESTADOS.JUSTIFICADA) faltasJustificadas++;
+                else if (dados.estado === ESTADOS.MEDICO) atestados++;
+            } else if (memoriaNuvem[chaveGeral]) {
+                feriadosGerais++;
+            } else {
+                diasUteis++;
+            }
+        }
+    }
+
+    el.innerHTML = `
+        <span class="badge badge-util">📅 Dias Úteis: <strong>${diasUteis}</strong></span>
+        <span class="badge badge-feriado">🏖️ Feriados/Recessos: <strong>${feriadosGerais}</strong></span>
+        <span class="badge badge-falta">📝 Faltas Justificadas: <strong>${faltasJustificadas}</strong></span>
+        <span class="badge badge-atestado">🏥 Atestados: <strong>${atestados}</strong></span>
+        <span class="badge badge-domingo">🔴 Domingos: <strong>${domingos}</strong></span>
+        <span class="badge badge-sabado">🔵 Sábados: <strong>${sabados}</strong></span>
+    `;
 }
 
 // ============================================================
@@ -672,7 +931,7 @@ function gerarFolha() {
 
 function exportarExcel() {
     if (bancoServidores.length === 0) {
-        alert("A lista de servidores está vazia!");
+        mostrarToast("⚠️ A lista de servidores está vazia!", "aviso");
         return;
     }
 
@@ -692,6 +951,7 @@ function exportarExcel() {
     document.body.appendChild(link);
     link.click();
     link.remove();
+    mostrarToast("📊 Arquivo Excel exportado!", "sucesso");
 }
 
 function exportarBackup() {
@@ -701,6 +961,7 @@ function exportarBackup() {
     document.body.appendChild(link);
     link.click();
     link.remove();
+    mostrarToast("💾 Backup exportado com sucesso!", "sucesso");
 }
 
 function importarBackup(evento) {
@@ -713,16 +974,16 @@ function importarBackup(evento) {
             const dados = JSON.parse(e.target.result);
             database.ref('cmei_dados').set(dados)
                 .then(() => {
-                    alert("✅ Backup restaurado!");
-                    location.reload();
+                    mostrarToast("✅ Backup restaurado! Recarregando...", "sucesso", 3000);
+                    setTimeout(() => location.reload(), 1500);
                 })
                 .catch((err) => {
                     console.error("Erro ao restaurar backup:", err);
-                    alert("❌ Erro ao salvar no banco de dados!");
+                    mostrarToast("❌ Erro ao salvar no banco de dados!", "erro");
                 });
         } catch (err) {
             console.error("Erro ao ler arquivo de backup:", err);
-            alert("❌ Arquivo inválido! Certifique-se de que é um JSON válido.");
+            mostrarToast("❌ Arquivo inválido! Certifique-se de que é um JSON válido.", "erro");
         }
     };
     leitor.readAsText(ficheiro);
@@ -741,7 +1002,7 @@ function filtrarServidoresPorSetor(filtroSetor) {
 
 function imprimirTodosLote() {
     if (bancoServidores.length === 0) {
-        alert("A lista de servidores está vazia!");
+        mostrarToast("⚠️ A lista de servidores está vazia!", "aviso");
         return;
     }
 
@@ -749,7 +1010,7 @@ function imprimirTodosLote() {
     const servidoresFiltrados = filtrarServidoresPorSetor(filtroSetor);
 
     if (servidoresFiltrados.length === 0) {
-        alert("Nenhum servidor encontrado neste setor!");
+        mostrarToast("⚠️ Nenhum servidor encontrado neste setor!", "aviso");
         return;
     }
 
@@ -789,10 +1050,56 @@ function imprimirTodosLote() {
 }
 
 // ============================================================
+// 8. MODO ESCURO
+// ============================================================
+
+function toggleTema() {
+    const html = document.documentElement;
+    const temaAtual = html.getAttribute('data-theme');
+    const novoTema = temaAtual === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', novoTema);
+    localStorage.setItem('tema-folha-ponto', novoTema);
+
+    const btnTema = document.getElementById('btn-tema');
+    if (btnTema) {
+        btnTema.textContent = novoTema === 'dark' ? '☀️' : '🌙';
+        btnTema.title = novoTema === 'dark' ? 'Modo Claro' : 'Modo Escuro';
+    }
+}
+
+function carregarTema() {
+    const temaSalvo = localStorage.getItem('tema-folha-ponto') || 'light';
+    document.documentElement.setAttribute('data-theme', temaSalvo);
+    const btnTema = document.getElementById('btn-tema');
+    if (btnTema) {
+        btnTema.textContent = temaSalvo === 'dark' ? '☀️' : '🌙';
+        btnTema.title = temaSalvo === 'dark' ? 'Modo Claro' : 'Modo Escuro';
+    }
+}
+
+// ============================================================
+// 9. PWA - SERVICE WORKER REGISTRATION
+// ============================================================
+
+function registrarServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+            .then(() => console.log('Service Worker registrado.'))
+            .catch(err => console.log('Service Worker falhou:', err));
+    }
+}
+
+// ============================================================
 // EVENT LISTENERS (registrados via JS ao invés de inline HTML)
 // ============================================================
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Carregar tema salvo
+    carregarTema();
+
+    // Registrar Service Worker
+    registrarServiceWorker();
+
     // --- index.html elements ---
     const btnImprimir = document.querySelector('.btn-imprimir');
     if (btnImprimir) btnImprimir.addEventListener('click', () => window.print());
@@ -863,6 +1170,34 @@ document.addEventListener('DOMContentLoaded', function () {
     // Logo duplo clique -> admin
     const logo = document.querySelector('.cabecalho-logo');
     if (logo) logo.addEventListener('dblclick', revelarBackup);
+
+    // 3. Busca de servidor
+    const buscaServidor = DOM.buscaServidor();
+    if (buscaServidor) {
+        buscaServidor.addEventListener('input', function () {
+            carregarListaServidores(this.value);
+        });
+    }
+
+    // 6. Desfazer (Ctrl+Z) — só intercepta quando não está em um campo editável
+    document.addEventListener('keydown', function (e) {
+        if (e.ctrlKey && e.key === 'z') {
+            const tag = document.activeElement.tagName;
+            const isEditable = document.activeElement.contentEditable === 'true';
+            if (tag !== 'INPUT' && tag !== 'TEXTAREA' && !isEditable) {
+                e.preventDefault();
+                desfazerUltimaAcao();
+            }
+        }
+    });
+
+    // Botão desfazer
+    const btnDesfazer = document.getElementById('btn-desfazer');
+    if (btnDesfazer) btnDesfazer.addEventListener('click', desfazerUltimaAcao);
+
+    // 8. Botão tema
+    const btnTema = document.getElementById('btn-tema');
+    if (btnTema) btnTema.addEventListener('click', toggleTema);
 
     // --- login.html elements ---
     const btnLogin = document.querySelector('.btn-login-gradient');

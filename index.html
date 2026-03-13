@@ -1,16 +1,21 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="description" content="Gerador de Folha de Ponto para CMEI Maria Jandira de Sousa Fonseca">
     <title>Gerador de Folha de Ponto CMEI - Nuvem</title>
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="logo.png">
 
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 
 <body>
@@ -24,6 +29,9 @@
         </div>
 
         <div class="botoes-acao-rapida">
+            <div id="status-nuvem" class="status-nuvem" title="Status da sincronização">☁️</div>
+            <button id="btn-desfazer" class="btn-acao-topo" aria-label="Desfazer última ação" title="Desfazer (Ctrl+Z)">↩️</button>
+            <button id="btn-tema" class="btn-acao-topo" aria-label="Alternar modo escuro" title="Modo Escuro">🌙</button>
             <button class="btn-imprimir" aria-label="Imprimir página atual">🖨️ Imprimir Atual</button>
             <button class="btn-lote" aria-label="Imprimir todos os servidores em lote">🖨️ Imprimir em Lote</button>
             <button class="btn-sair" title="Sair com Segurança" aria-label="Sair do sistema">Sair 🔒</button>
@@ -43,7 +51,8 @@
         <div class="controles-foco">
             <!-- Seção de Seleção de Servidor -->
             <div class="box-controle">
-                <label for="seletor-servidor">Servidor:</label>
+                <label for="busca-servidor">Servidor:</label>
+                <input type="text" id="busca-servidor" placeholder="🔍 Buscar servidor por nome..." autocomplete="off">
                 <div class="grupo-seletor-moderno">
                     <select id="seletor-servidor"></select>
                     <button class="btn-add" title="Cadastrar Novo Servidor">➕</button>
@@ -160,7 +169,7 @@
         </table>
 
         <div class="aviso-clique">💡 DICA: Clique <b>ESQUERDO</b> para Recessos. Clique <b>DIREITO</b> para Atestados.
-            Clique num <b>SÁBADO</b> para abrir a linha. Nomes de feriados agora são clicáveis e editáveis!</div>
+            Clique num <b>SÁBADO</b> para abrir a linha. <b>Ctrl+Z</b> para desfazer!</div>
 
         <table class="tabela-ponto">
             <thead>
@@ -180,6 +189,9 @@
             <tbody id="corpo-tabela"></tbody>
         </table>
 
+        <!-- Contador de Resumo -->
+        <div id="resumo-folha" class="resumo-folha"></div>
+
         <div class="assinaturas-rodape">
             <div class="bloco-assinatura">
                 <div class="linha-assinatura">
@@ -189,6 +201,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
 
     <script src="script.js"></script>
 </body>

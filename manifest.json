@@ -1,0 +1,24 @@
+{
+    "name": "Folha de Ponto CMEI",
+    "short_name": "Ponto CMEI",
+    "description": "Gerador de Folha de Ponto - CMEI Maria Jandira",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#f0f4ff",
+    "theme_color": "#1e293b",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
