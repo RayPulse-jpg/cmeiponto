@@ -1,0 +1,36 @@
+{
+    "name": "AutomaPonto",
+    "short_name": "AutomaPonto",
+    "description": "AutomaPonto - Sistema inteligente de geração e gerenciamento de folhas de ponto para instituições de ensino.",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#f0f4ff",
+    "theme_color": "#1e293b",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
