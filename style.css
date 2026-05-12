@@ -211,7 +211,7 @@
 
         .grupo-seletor-moderno select {
             flex: 1;
-            min-width: 320px;
+            min-width: 0;
         }
 
         .grupo-seletor {
