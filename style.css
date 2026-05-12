@@ -1141,7 +1141,8 @@
                 content: "";
             }
 
-            body.modo-lote #folha-impressao {
+            body.modo-lote #folha-impressao,
+            body.modo-relacao #folha-impressao {
                 display: none !important;
             }
 
@@ -1149,7 +1150,11 @@
                 display: block !important;
             }
 
-            body:not(.modo-lote) #folha-impressao {
+            body.modo-relacao #relacao-impressao {
+                display: block !important;
+            }
+
+            body:not(.modo-lote):not(.modo-relacao) #folha-impressao {
                 display: block !important;
             }
 
@@ -1163,6 +1168,10 @@
             }
 
             body:not(.modo-lote) #print-wrapper {
+                display: none !important;
+            }
+
+            body:not(.modo-relacao) #relacao-impressao {
                 display: none !important;
             }
 
