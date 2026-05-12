@@ -13,6 +13,7 @@ const ESTADOS = { NORMAL: 0, JUSTIFICADA: 1, MEDICO: 2 };
 
 const TURNOS = {
     MANUAL: "MANUAL",
+    PARCIAL: "PARCIAL",
     MATUTINO: "MATUTINO",
     VESPERTINO: "VESPERTINO",
     INTEGRAL: "INTEGRAL"
@@ -640,6 +641,7 @@ function desfazerUltimaAcao() {
 
 function obterCelulasHoras(turno) {
     const mapas = {
+        [TURNOS.PARCIAL]: '<td>06:30</td><td>10:30</td><td>---</td><td>---</td>',
         [TURNOS.MATUTINO]: '<td>08:00</td><td>12:00</td><td>---</td><td>---</td>',
         [TURNOS.VESPERTINO]: '<td>---</td><td>---</td><td>13:00</td><td>17:00</td>',
         [TURNOS.INTEGRAL]: '<td>08:00</td><td>12:00</td><td>13:00</td><td>17:00</td>',
