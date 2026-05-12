@@ -697,7 +697,9 @@
 
         /* 👇 GARANTIA DE CENTRALIZAÇÃO PARA FERIADOS 👇 */
         .fim-de-semana {
-            background-color: #e2e8f0;
+            background-color: #e2e8f0 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
             font-weight: bold;
             letter-spacing: 2px;
             text-align: center !important;
@@ -705,13 +707,16 @@
             line-height: 18px;
             font-size: 11px;
             padding: 0 4px !important;
+            color: #000;
         }
 
         .linha-individual {
-            background-color: #fefcbf;
+            background-color: #e2e8f0 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
             font-weight: bold;
             letter-spacing: 1px;
-            color: #744210;
+            color: #000;
             text-align: center !important;
         }
 
