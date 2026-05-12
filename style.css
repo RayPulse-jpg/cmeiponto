@@ -1109,7 +1109,8 @@
             }
 
             @page {
-                margin: 0.4cm;
+                size: A4 portrait;
+                margin: 0.3cm;
             }
 
             .controles,
@@ -1165,62 +1166,92 @@
                 display: none !important;
             }
 
-            /* ACHATAMENTO DAS LINHAS: de 28px para 25px para sobrar espaço embaixo */
+            /* ── LINHAS DA TABELA ── */
             .tabela-ponto td {
-                height: 25px !important;
-                padding: 0px 4px !important;
-                font-size: 13px !important;
+                height: 20px !important;
+                padding: 0 3px !important;
+                font-size: 11.5px !important;
+            }
+
+            /* Sábado e Domingo ainda menores */
+            .fim-de-semana {
+                height: 14px !important;
+                line-height: 14px !important;
+                font-size: 10px !important;
+                padding: 0 3px !important;
+                letter-spacing: 1px;
             }
 
             .tabela-ponto th {
-                padding: 4px !important;
-                font-size: 12px !important;
+                padding: 3px !important;
+                font-size: 11px !important;
             }
 
             .tabela-info td {
-                padding: 6px !important;
-                font-size: 13px !important;
+                padding: 4px 6px !important;
+                font-size: 12px !important;
             }
 
             .tabela-info,
             .tabela-ponto {
-                margin-bottom: 5px !important;
+                margin-bottom: 3px !important;
             }
 
+            /* ── CABEÇALHO ── */
             .cabecalho-container {
-                margin-bottom: 5px !important;
-                min-height: 65px !important;
+                margin-bottom: 4px !important;
+                min-height: 55px !important;
+            }
+
+            .cabecalho-logo {
+                min-width: 55px !important;
+                min-height: 55px !important;
             }
 
             .cabecalho-logo img {
-                max-height: 65px !important;
+                max-height: 55px !important;
+                max-width: 55px !important;
+            }
+
+            .cabecalho-textos {
+                padding: 0 65px !important;
             }
 
             .cabecalho-textos h3 {
-                font-size: 13px !important;
+                font-size: 12px !important;
                 margin: 0 !important;
             }
 
             .cabecalho-textos p {
-                font-size: 10px !important;
+                font-size: 9.5px !important;
                 margin: 1px 0 !important;
             }
 
             .cabecalho-textos h2 {
-                font-size: 15px !important;
-                margin-top: 5px !important;
-                margin-bottom: 5px !important;
+                font-size: 13px !important;
+                margin-top: 4px !important;
+                margin-bottom: 3px !important;
             }
 
-            /* ESPAÇO EXTRA: Empurra a assinatura para baixo para não grudar na tabela */
+            /* ── ASSINATURA E CARIMBO ── */
             .assinaturas-rodape {
-                margin-top: 30px !important;
-                margin-bottom: 10px !important;
+                margin-top: 10px !important;
+                margin-bottom: 0 !important;
+                padding: 0 20px !important;
+            }
+
+            .linha-assinatura {
+                font-size: 11px !important;
+            }
+
+            .cargo-assinatura {
+                font-size: 10px !important;
             }
 
             .area-carimbo {
                 border: 1px dashed #475569 !important;
-                height: 65px !important;
+                height: 52px !important;
+                margin-top: 5px !important;
                 border-radius: 4px !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
@@ -1228,6 +1259,12 @@
 
             .label-carimbo {
                 color: #475569 !important;
+                font-size: 8px !important;
+            }
+
+            /* ── RESUMO ── */
+            .resumo-folha {
+                display: none !important;
             }
 
             .quebra-pagina {
@@ -1249,7 +1286,6 @@
             .toast-container,
             .status-nuvem,
             #busca-servidor,
-            .resumo-folha,
             .tooltip-estado,
             #btn-desfazer,
             #btn-tema {
