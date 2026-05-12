@@ -117,7 +117,9 @@ function escapeHtml(unsafe) {
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+        .replace(/'/g, "&#039;")
+        .replace(/\//g, "&#x2F;")
+        .replace(/`/g, "&#x60;");
 }
 
 function mascaraCPF(campo) {
@@ -154,7 +156,18 @@ function mostrarToast(mensagem, tipo = 'info', duracao = 3500) {
 
     const toast = document.createElement('div');
     toast.className = `toast toast-${tipo}`;
-    toast.innerHTML = `<span class="toast-msg">${mensagem}</span><button class="toast-fechar" aria-label="Fechar">✕</button>`;
+    
+    const span = document.createElement('span');
+    span.className = 'toast-msg';
+    span.textContent = mensagem; // Usar textContent para evitar XSS em mensagens
+    
+    const btn = document.createElement('button');
+    btn.className = 'toast-fechar';
+    btn.setAttribute('aria-label', 'Fechar');
+    btn.textContent = '✕';
+    
+    toast.appendChild(span);
+    toast.appendChild(btn);
     container.appendChild(toast);
 
     // Trigger animation
@@ -406,12 +419,19 @@ function carregarDadosDaNuvem() {
 function revelarBackup() {
     const painel = DOM.painelSecreto();
     const estaOculto = painel.classList.contains('hidden');
-    painel.classList.toggle('hidden');
+
     if (estaOculto) {
-        painel.style.display = 'flex';
-        mostrarToast("🔓 Modo Administrador ativado!", "info");
+        const senha = prompt("🔐 Digite a senha administrativa para acessar as opções avançadas:");
+        if (senha === "cmei2026") { // Senha simples solicitada pelo usuário (pode ser alterada via Firebase no futuro)
+            painel.classList.remove('hidden');
+            painel.style.display = 'flex';
+            mostrarToast("🔓 Modo Administrador ativado!", "info");
+        } else {
+            mostrarToast("❌ Senha incorreta!", "erro");
+        }
     } else {
-        painel.style.display = '';
+        painel.classList.add('hidden');
+        painel.style.display = 'none';
     }
 }
 
@@ -449,9 +469,16 @@ function carregarListaServidores(filtroTexto = '') {
             optGroupAtual.label = "📌 " + cat.substring(4);
             seletor.appendChild(optGroupAtual);
         }
+        
+        // Mascarar CPF para privacidade na lista (ex: ***.131.***-07)
+        let cpfMascarado = "";
+        if (servidor.cpf && servidor.cpf.length >= 14) {
+            cpfMascarado = ` (CPF: ***.${servidor.cpf.substring(4, 7)}.***-${servidor.cpf.substring(12)})`;
+        }
+
         const opcao = document.createElement('option');
         opcao.value = index;
-        opcao.text = servidor.nome;
+        opcao.text = servidor.nome + cpfMascarado;
         if (optGroupAtual) optGroupAtual.appendChild(opcao);
         else seletor.appendChild(opcao);
     });
@@ -915,14 +942,23 @@ function atualizarResumo() {
         }
     }
 
-    el.innerHTML = `
-        <span class="badge badge-util">📅 Dias Úteis: <strong>${diasUteis}</strong></span>
-        <span class="badge badge-feriado">🏖️ Feriados/Recessos: <strong>${feriadosGerais}</strong></span>
-        <span class="badge badge-falta">📝 Faltas Justificadas: <strong>${faltasJustificadas}</strong></span>
-        <span class="badge badge-atestado">🏥 Atestados: <strong>${atestados}</strong></span>
-        <span class="badge badge-domingo">🔴 Domingos: <strong>${domingos}</strong></span>
-        <span class="badge badge-sabado">🔵 Sábados: <strong>${sabados}</strong></span>
-    `;
+    el.innerHTML = ''; // Limpar antes de reconstruir de forma segura
+
+    const badges = [
+        { label: '📅 Dias Úteis:', valor: diasUteis, classe: 'badge-util' },
+        { label: '🏖️ Feriados/Recessos:', valor: feriadosGerais, classe: 'badge-feriado' },
+        { label: '📝 Faltas Justificadas:', valor: faltasJustificadas, classe: 'badge-falta' },
+        { label: '🏥 Atestados:', valor: atestados, classe: 'badge-atestado' },
+        { label: '🔴 Domingos:', valor: domingos, classe: 'badge-domingo' },
+        { label: '🔵 Sábados:', valor: sabados, classe: 'badge-sabado' }
+    ];
+
+    badges.forEach(b => {
+        const span = document.createElement('span');
+        span.className = `badge ${b.classe}`;
+        span.innerHTML = `${b.label} <strong>${b.valor}</strong>`; // Valor é numérico, seguro aqui
+        el.appendChild(span);
+    });
 }
 
 // ============================================================
@@ -972,6 +1008,14 @@ function importarBackup(evento) {
     leitor.onload = function (e) {
         try {
             const dados = JSON.parse(e.target.result);
+            
+            // Validação de Estrutura de Segurança
+            if (typeof dados !== 'object' || Array.isArray(dados)) {
+                throw new Error("Formato JSON de backup inválido.");
+            }
+
+            mostrarCarregamento("☢️ Restaurando Backup e validando dados...");
+
             database.ref('cmei_dados').set(dados)
                 .then(() => {
                     mostrarToast("✅ Backup restaurado! Recarregando...", "sucesso", 3000);
@@ -1068,6 +1112,171 @@ function imprimirTodosLote() {
         gerarFolha();
         window.onafterprint = null;
     };
+}
+
+// ============================================================
+// RELAÇÃO DE FUNCIONÁRIOS
+// ============================================================
+
+const NOMES_SETORES = {
+    "A - ADMINISTRATIVO": "Setor Administrativo",
+    "B - PROFESSORAS": "Professoras",
+    "C - MONITORAS": "Monitoras",
+    "D - EQUIPE DE APOIO": "Equipe de Apoio"
+};
+
+function abrirModalRelacao() {
+    document.getElementById('modalRelacao').style.display = 'flex';
+    atualizarPreviewRelacao();
+}
+
+function fecharModalRelacao() {
+    document.getElementById('modalRelacao').style.display = 'none';
+}
+
+function atualizarPreviewRelacao() {
+    const setor = document.getElementById('setor-relacao').value;
+    const preview = document.getElementById('relacao-preview');
+
+    const servidoresFiltrados = bancoServidores.filter(s =>
+        setor === 'TODOS' || (s.categoria || CATEGORIAS.APOIO) === setor
+    );
+
+    if (servidoresFiltrados.length === 0) {
+        preview.innerHTML = '<p class="relacao-preview-vazio">⚠️ Nenhum funcionário encontrado neste setor.</p>';
+        return;
+    }
+
+    // Agrupar por setor
+    const grupos = {};
+    servidoresFiltrados.forEach(s => {
+        const cat = s.categoria || CATEGORIAS.APOIO;
+        if (!grupos[cat]) grupos[cat] = [];
+        grupos[cat].push(s);
+    });
+
+    let html = '<table class="relacao-preview-table"><thead><tr>'
+        + '<th>#</th><th>Nome</th><th>Cargo</th><th>Turno</th>'
+        + '</tr></thead><tbody>';
+
+    let num = 1;
+    Object.keys(grupos).sort().forEach(cat => {
+        if (setor === 'TODOS') {
+            html += `<tr><td colspan="4" class="relacao-preview-setor">📌 ${cat}</td></tr>`;
+        }
+        grupos[cat].forEach(s => {
+            html += `<tr>
+                <td>${num++}</td>
+                <td>${escapeHtml(s.nome)}</td>
+                <td>${escapeHtml(s.cargo)}</td>
+                <td>${escapeHtml(s.turno || 'MANUAL')}</td>
+            </tr>`;
+        });
+    });
+
+    html += `</tbody></table>`;
+    preview.innerHTML = html;
+}
+
+function imprimirRelacaoFuncionarios() {
+    const setor = document.getElementById('setor-relacao').value;
+
+    const servidoresFiltrados = bancoServidores.filter(s =>
+        setor === 'TODOS' || (s.categoria || CATEGORIAS.APOIO) === setor
+    );
+
+    if (servidoresFiltrados.length === 0) {
+        mostrarToast('⚠️ Nenhum funcionário neste setor!', 'aviso');
+        return;
+    }
+
+    const tituloSetor = setor === 'TODOS' ? 'TODOS OS SETORES' : setor;
+    const dataAtual = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    // Agrupar por setor
+    const grupos = {};
+    servidoresFiltrados.forEach(s => {
+        const cat = s.categoria || CATEGORIAS.APOIO;
+        if (!grupos[cat]) grupos[cat] = [];
+        grupos[cat].push(s);
+    });
+
+    // Montar linhas da tabela
+    let linhasHTML = '';
+    let num = 1;
+    Object.keys(grupos).sort().forEach(cat => {
+        // Linha separadora de setor (sempre, mesmo com 1 setor, para clareza)
+        linhasHTML += `<tr class="setor-row"><td colspan="5">📌 ${escapeHtml(cat)}</td></tr>`;
+        grupos[cat].forEach(s => {
+            const turnoLabel = {
+                'MANUAL': 'Manual', 'MATUTINO': 'Matutino (08h-12h)',
+                'VESPERTINO': 'Vespertino (13h-17h)', 'INTEGRAL': 'Integral (08h-17h)'
+            }[s.turno || 'MANUAL'] || s.turno;
+
+            linhasHTML += `<tr>
+                <td style="width:40px;text-align:center;">${num++}</td>
+                <td style="font-weight:600;">${escapeHtml(s.nome)}</td>
+                <td>${escapeHtml(s.cargo)}</td>
+                <td>${escapeHtml(s.cpf)}</td>
+                <td>${escapeHtml(turnoLabel)}</td>
+            </tr>`;
+        });
+    });
+
+    const conteudo = `
+        <div class="relacao-print-page">
+            <div class="relacao-cabecalho">
+                <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
+                <div class="relacao-cabecalho-textos">
+                    <h3>CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL MARIA JANDIRA DE SOUSA FONSECA</h3>
+                    <p>Rua Maria Madalena – Centro – Cep: 48.415-000 | Fátima - Bahia</p>
+                    <p>E-mail: mariajandira2015@hotmail.com | CNPJ: 24.755.198/0001-81</p>
+                    <h2>RELAÇÃO DE FUNCIONÁRIOS — ${escapeHtml(tituloSetor)}</h2>
+                    <p style="font-size:11px; margin-top:4px;">Emitido em: ${dataAtual} &nbsp;|&nbsp; Total: <strong>${servidoresFiltrados.length} funcionário(s)</strong></p>
+                </div>
+            </div>
+
+            <table class="relacao-tabela">
+                <thead>
+                    <tr>
+                        <th style="width:40px;">#</th>
+                        <th>Nome Completo</th>
+                        <th>Cargo / Função</th>
+                        <th>CPF</th>
+                        <th>Turno</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${linhasHTML}
+                </tbody>
+            </table>
+
+            <div class="relacao-rodape">
+                <div class="relacao-info-total">
+                    Total de funcionários: <strong>${servidoresFiltrados.length}</strong><br>
+                    Documento gerado pelo AutomaPonto © 2026
+                </div>
+                <div class="relacao-assinatura">
+                    <div class="linha-ass">JOSEFA MARCIANIA DO NASCIMENTO SILVA</div>
+                    <div style="font-size:11px; color:#64748b; margin-top:3px;">Diretora</div>
+                </div>
+            </div>
+        </div>`;
+
+    const areaImpressao = document.getElementById('relacao-impressao');
+    areaImpressao.innerHTML = conteudo;
+
+    fecharModalRelacao();
+    document.body.classList.add('modo-relacao');
+
+    setTimeout(() => {
+        window.print();
+        window.onafterprint = function () {
+            document.body.classList.remove('modo-relacao');
+            areaImpressao.innerHTML = '';
+            window.onafterprint = null;
+        };
+    }, 300);
 }
 
 // ============================================================
@@ -1197,6 +1406,27 @@ document.addEventListener('DOMContentLoaded', function () {
     if (buscaServidor) {
         buscaServidor.addEventListener('input', function () {
             carregarListaServidores(this.value);
+        });
+    }
+
+    // Relação de funcionários
+    const btnRelacao = document.getElementById('btn-relacao');
+    if (btnRelacao) btnRelacao.addEventListener('click', abrirModalRelacao);
+
+    const btnCancelarRelacao = document.getElementById('btn-cancelar-relacao');
+    if (btnCancelarRelacao) btnCancelarRelacao.addEventListener('click', fecharModalRelacao);
+
+    const btnImprimirRelacao = document.getElementById('btn-imprimir-relacao');
+    if (btnImprimirRelacao) btnImprimirRelacao.addEventListener('click', imprimirRelacaoFuncionarios);
+
+    const setorRelacaoSelect = document.getElementById('setor-relacao');
+    if (setorRelacaoSelect) setorRelacaoSelect.addEventListener('change', atualizarPreviewRelacao);
+
+    // Fechar modal de relação ao clicar fora
+    const modalRelacao = document.getElementById('modalRelacao');
+    if (modalRelacao) {
+        modalRelacao.addEventListener('click', function (e) {
+            if (e.target === this) fecharModalRelacao();
         });
     }
 

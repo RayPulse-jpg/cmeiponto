@@ -38,6 +38,7 @@
             <button id="btn-tema" class="btn-acao-topo" aria-label="Alternar modo escuro" title="Modo Escuro">🌙</button>
             <button class="btn-imprimir" aria-label="Imprimir página atual">🖨️ Imprimir Atual</button>
             <button class="btn-lote" aria-label="Imprimir todos os servidores em lote">🖨️ Imprimir em Lote</button>
+            <button class="btn-relacao" id="btn-relacao" aria-label="Imprimir relação de funcionários por setor" title="Imprimir Relação de Funcionários">📋 Relação</button>
             <button class="btn-sair" title="Sair com Segurança" aria-label="Sair do sistema">Sair 🔒</button>
             <button class="btn-backup" title="Administrador" aria-label="Abrir opções de administrador">⚙️ Opções</button>
         </div>
@@ -141,8 +142,39 @@
                 <button class="btn-cancelar">Cancelar</button>
                 <button class="btn-add">Salvar na Nuvem</button>
             </div>
+            <p style="font-size: 10px; color: #94a3b8; margin-top: 10px; text-align: center;">
+                🔒 Seus dados são processados em conformidade com a LGPD e armazenados de forma segura.
+            </p>
         </div>
     </div>
+
+    <!-- Modal Imprimir Relação de Funcionários -->
+    <div id="modalRelacao" class="modal-overlay">
+        <div class="modal-content modal-relacao">
+            <h3>📋 Imprimir Relação de Funcionários</h3>
+            <p class="modal-desc">Selecione o setor que deseja imprimir ou escolha <strong>TODOS</strong> para imprimir a relação completa.</p>
+            <div class="relacao-opcoes">
+                <label for="setor-relacao">Setor:</label>
+                <select id="setor-relacao" class="destaque">
+                    <option value="TODOS">🗂️ TODOS OS SETORES</option>
+                    <option value="A - ADMINISTRATIVO">A - ADMINISTRATIVO</option>
+                    <option value="B - PROFESSORAS">B - PROFESSORAS</option>
+                    <option value="C - MONITORAS">C - MONITORAS</option>
+                    <option value="D - EQUIPE DE APOIO">D - EQUIPE DE APOIO</option>
+                </select>
+            </div>
+            <div class="relacao-preview" id="relacao-preview">
+                <p style="text-align:center; color: var(--text-muted); font-size:13px;">Selecione um setor para visualizar a prévia</p>
+            </div>
+            <div class="modal-botoes">
+                <button class="btn-cancelar" id="btn-cancelar-relacao">Cancelar</button>
+                <button class="btn-imprimir-relacao" id="btn-imprimir-relacao">🖨️ Imprimir Relação</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Área de impressão da Relação -->
+    <div id="relacao-impressao" style="display:none;"></div>
 
     <div id="print-wrapper"></div>
 
@@ -205,9 +237,6 @@
             </div>
         </div>
         
-        <div style="text-align: center; margin-top: 20px; font-size: 11px; color: #64748b; font-weight: bold;">
-            Desenvolvido com AutomaPonto &copy; 2026
-        </div>
     </div>
 
     <!-- Toast Container -->

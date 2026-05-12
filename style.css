@@ -362,6 +362,241 @@
             transform: translateY(-1px);
         }
 
+        /* ============================================================
+           BOTÃO RELAÇÃO DE FUNCIONÁRIOS
+           ============================================================ */
+        .btn-relacao {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: white;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+            white-space: nowrap;
+        }
+
+        .btn-relacao:hover {
+            background: linear-gradient(135deg, #6d28d9, #9333ea);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.45);
+        }
+
+        /* Modal relação maior */
+        .modal-relacao {
+            width: 520px;
+            max-width: 95vw;
+        }
+
+        .modal-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 0 0 12px 0;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .relacao-opcoes {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .relacao-opcoes label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Tabela de prévia dentro do modal */
+        .relacao-preview {
+            margin-top: 14px;
+            max-height: 260px;
+            overflow-y: auto;
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            background: var(--input-bg, #f8fafc);
+        }
+
+        .relacao-preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .relacao-preview-table thead th {
+            background: #1e293b;
+            color: white;
+            padding: 7px 10px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .relacao-preview-table tbody tr:nth-child(even) {
+            background: var(--hover-bg, #f1f5f9);
+        }
+
+        .relacao-preview-table tbody td {
+            padding: 6px 10px;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-main);
+        }
+
+        .relacao-preview-setor {
+            background: linear-gradient(to right, #ede9fe, #f5f3ff) !important;
+            font-weight: 700;
+            font-size: 11px;
+            color: #5b21b6 !important;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 5px 10px !important;
+        }
+
+        .relacao-preview-vazio {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 20px;
+            font-size: 13px;
+        }
+
+        /* Botão imprimir relação */
+        .btn-imprimir-relacao {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: white;
+        }
+
+        .btn-imprimir-relacao:hover {
+            background: linear-gradient(135deg, #6d28d9, #9333ea);
+        }
+
+        /* ============================================================
+           IMPRESSÃO DA RELAÇÃO DE FUNCIONÁRIOS
+           ============================================================ */
+        #relacao-impressao {
+            display: none;
+        }
+
+        .relacao-print-page {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            background: white;
+            color: #000;
+        }
+
+        .relacao-cabecalho {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
+
+        .relacao-cabecalho img {
+            max-height: 70px;
+            max-width: 70px;
+            object-fit: contain;
+        }
+
+        .relacao-cabecalho-textos {
+            flex: 1;
+            text-align: center;
+        }
+
+        .relacao-cabecalho-textos h3 {
+            margin: 0;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .relacao-cabecalho-textos p {
+            margin: 2px 0;
+            font-size: 11px;
+        }
+
+        .relacao-cabecalho-textos h2 {
+            margin: 8px 0 0 0;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .relacao-tabela {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .relacao-tabela th {
+            background: #1e293b;
+            color: white;
+            padding: 7px 8px;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .relacao-tabela td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #cbd5e1;
+        }
+
+        .relacao-tabela tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        .relacao-tabela .setor-row td {
+            background: #1e293b;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 5px 8px;
+        }
+
+        .relacao-rodape {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .relacao-assinatura {
+            text-align: center;
+        }
+
+        .relacao-assinatura .linha-ass {
+            border-top: 1px solid #000;
+            padding-top: 5px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 200px;
+        }
+
+        .relacao-info-total {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        @media print {
+            body.modo-relacao .controles,
+            body.modo-relacao .controles-avancados,
+            body.modo-relacao .folha-container,
+            body.modo-relacao .modal-overlay,
+            body.modo-relacao #print-wrapper,
+            body.modo-relacao #toast-container {
+                display: none !important;
+            }
+
+            body.modo-relacao #relacao-impressao {
+                display: block !important;
+            }
+        }
+
         .folha-container {
             background-color: white;
             padding: 30px 40px;
