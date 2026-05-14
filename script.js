@@ -804,6 +804,46 @@ function alternarAusenciaIndividual(linhaElemento, ano, mes, diaNumero, evento, 
     atualizarResumo();
 }
 
+function preencherAtestadoEmMassa() {
+    const nomeAtual = obterNomeAtual();
+    if (nomeAtual === SERVIDOR_PADRAO.nome || nomeAtual === "") {
+        mostrarToast("⚠️ Selecione um servidor primeiro.", "aviso");
+        return;
+    }
+
+    const rotuloDesejado = prompt("Digite o nome da licença/atestado (ex: LICENÇA MATERNIDADE):", "LICENÇA MATERNIDADE");
+    if (!rotuloDesejado || rotuloDesejado.trim() === "") return;
+
+    const selectMes = DOM.selectMes();
+    const mes = parseInt(selectMes.value);
+    const ano = parseInt(DOM.selectAno().value);
+    const diasNoMes = new Date(ano, mes, 0).getDate();
+
+    let aplicou = false;
+
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+        const diaDaSemana = new Date(ano, mes - 1, dia).getDay();
+        const isSabadoAberto = memoriaNuvem[`sabado_aberto_${ano}_${mes}_${dia}`] === "1";
+
+        // Aplica apenas em dias úteis (não domingo, não sábado fechado)
+        if (diaDaSemana !== 0 && !(diaDaSemana === 6 && !isSabadoAberto)) {
+            const chave = `ausencia_${nomeAtual}_${ano}_${mes}_${dia}`;
+            
+            registrarAcao(chave, memoriaNuvem[chave] || null);
+
+            const dados = { estado: ESTADOS.MEDICO, motivo: "", rotulo: rotuloDesejado.trim().toUpperCase() };
+            
+            salvarNaNuvem(chave, JSON.stringify(dados));
+            aplicou = true;
+        }
+    }
+
+    if (aplicou) {
+        gerarFolha();
+        mostrarToast(`✅ ${rotuloDesejado.toUpperCase()} aplicado ao mês selecionado!`, "sucesso");
+    }
+}
+
 // --- Funções auxiliares para criação de linhas da tabela ---
 
 function criarLinhaDomingo(dia) {
@@ -1371,6 +1411,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const selectAno = DOM.selectAno();
     if (selectAno) selectAno.addEventListener('change', gerarFolha);
+
+    // Botão atestado em massa
+    const btnAtestadoMassa = document.getElementById('btn-atestado-massa');
+    if (btnAtestadoMassa) btnAtestadoMassa.addEventListener('click', preencherAtestadoEmMassa);
 
     // Modal de cadastro
     const btnAddServidor = document.querySelector('.grupo-seletor-moderno .btn-add');
