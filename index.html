@@ -49,6 +49,7 @@
         <button class="btn-excel">📊 Exportar para Excel</button>
         <button class="btn-backup">💾 Exportar Backup</button>
         <button class="btn-add">📂 Restaurar Backup</button>
+        <button class="btn-cabecalho" id="btn-editar-cabecalho" title="Editar dados do cabeçalho da folha">✏️ Editar Cabeçalho</button>
         <input type="file" id="file-import" class="hidden" accept=".json">
     </div>
 
@@ -79,14 +80,18 @@
 
             <div class="box-controle">
                 <label for="seletor-turno">Turno Padrão:</label>
-                <select id="seletor-turno" class="destaque-turno">
-                    <option value="MANUAL">✏️ Manual</option>
-                    <option value="PARCIAL">🌅 Parcial Cedo</option>
-                    <option value="PARCIAL_TARDE">🌇 Parcial Tarde</option>
-                    <option value="MATUTINO">🌅 Matutino</option>
-                    <option value="VESPERTINO">🌇 Vespertino</option>
-                    <option value="INTEGRAL">☀️ Integral</option>
-                </select>
+                <div class="grupo-seletor-turno">
+                    <select id="seletor-turno" class="destaque-turno">
+                        <option value="MANUAL">✏️ Manual</option>
+                        <option value="CUSTOM">⚙️ Customizado</option>
+                        <option value="PARCIAL">🌅 Parcial Cedo</option>
+                        <option value="PARCIAL_TARDE">🌇 Parcial Tarde</option>
+                        <option value="MATUTINO">🌅 Matutino</option>
+                        <option value="VESPERTINO">🌇 Vespertino</option>
+                        <option value="INTEGRAL">☀️ Integral</option>
+                    </select>
+                    <button id="btn-turno-custom" class="btn-custom-horario" title="Definir horários customizados para este servidor">⚙️ Horários</button>
+                </div>
             </div>
 
             <!-- Seção de Período -->
@@ -139,6 +144,7 @@
             </select>
             <select id="novo-turno">
                 <option value="MANUAL">Horário: Manual (Em Branco)</option>
+                <option value="CUSTOM">Horário: Customizado (definir após cadastro)</option>
                 <option value="PARCIAL">Horário: Parcial Cedo (06h30-10h30)</option>
                 <option value="PARCIAL_TARDE">Horário: Parcial Tarde (11h40-15h40)</option>
                 <option value="MATUTINO">Horário: Matutino (08h-12h)</option>
@@ -152,6 +158,79 @@
             <p style="font-size: 10px; color: #94a3b8; margin-top: 10px; text-align: center;">
                 🔒 Seus dados são processados em conformidade com a LGPD e armazenados de forma segura.
             </p>
+        </div>
+    </div>
+
+    <!-- Modal Editar Cabeçalho -->
+    <div id="modalCabecalho" class="modal-overlay">
+        <div class="modal-content modal-cabecalho">
+            <h3>✏️ Editar Cabeçalho da Folha</h3>
+            <p class="modal-desc">Personalize os dados institucionais exibidos no topo da folha de ponto.</p>
+            <div class="cabecalho-form">
+                <div class="form-group-cab">
+                    <label for="cab-nome-escola">Nome da Escola / Instituição</label>
+                    <input type="text" id="cab-nome-escola" placeholder="Ex: CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL...">
+                </div>
+                <div class="form-group-cab">
+                    <label for="cab-endereco">Endereço</label>
+                    <input type="text" id="cab-endereco" placeholder="Ex: Rua Maria Madalena – Centro – Cep: 48.415-000 | Fátima - Bahia">
+                </div>
+                <div class="form-group-cab">
+                    <label for="cab-email-cnpj">E-mail e CNPJ</label>
+                    <input type="text" id="cab-email-cnpj" placeholder="Ex: email@escola.com | CNPJ: 00.000.000/0001-00">
+                </div>
+                <div class="form-row-cab">
+                    <div class="form-group-cab">
+                        <label for="cab-diretora-nome">Nome da Diretora</label>
+                        <input type="text" id="cab-diretora-nome" placeholder="Ex: JOSEFA MARCIANIA DO NASCIMENTO SILVA">
+                    </div>
+                    <div class="form-group-cab">
+                        <label for="cab-diretora-cargo">Cargo</label>
+                        <input type="text" id="cab-diretora-cargo" placeholder="Ex: Diretora">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-botoes">
+                <button class="btn-cancelar" id="btn-cancelar-cabecalho">Cancelar</button>
+                <button class="btn-add" id="btn-salvar-cabecalho">💾 Salvar Cabeçalho</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Turno Customizado -->
+    <div id="modalTurnoCustom" class="modal-overlay">
+        <div class="modal-content modal-turno-custom">
+            <h3>⚙️ Horários Customizados</h3>
+            <p class="modal-desc">Defina os horários de entrada e saída para este servidor. Deixe em branco para exibir <strong>---</strong> na folha.</p>
+            <div class="turno-custom-grid">
+                <div class="turno-custom-coluna">
+                    <span class="turno-custom-label">🌅 MATUTINO</span>
+                    <div class="form-group-cab">
+                        <label for="custom-entrada-mat">Entrada</label>
+                        <input type="time" id="custom-entrada-mat" placeholder="--:--">
+                    </div>
+                    <div class="form-group-cab">
+                        <label for="custom-saida-mat">Saída</label>
+                        <input type="time" id="custom-saida-mat" placeholder="--:--">
+                    </div>
+                </div>
+                <div class="turno-custom-coluna">
+                    <span class="turno-custom-label">🌇 VESPERTINO</span>
+                    <div class="form-group-cab">
+                        <label for="custom-entrada-vesp">Entrada</label>
+                        <input type="time" id="custom-entrada-vesp" placeholder="--:--">
+                    </div>
+                    <div class="form-group-cab">
+                        <label for="custom-saida-vesp">Saída</label>
+                        <input type="time" id="custom-saida-vesp" placeholder="--:--">
+                    </div>
+                </div>
+            </div>
+            <p class="turno-custom-exemplo">💡 Exemplo: Entrada 06:30, Saída 13:00 → preencha só o Matutino.</p>
+            <div class="modal-botoes">
+                <button class="btn-cancelar" id="btn-cancelar-turno-custom">Cancelar</button>
+                <button class="btn-add" id="btn-salvar-turno-custom">✅ Aplicar Horários</button>
+            </div>
         </div>
     </div>
 
