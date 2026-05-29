@@ -13,6 +13,7 @@ const ESTADOS = { NORMAL: 0, JUSTIFICADA: 1, MEDICO: 2 };
 
 const TURNOS = {
     MANUAL: "MANUAL",
+    CUSTOM: "CUSTOM",
     PARCIAL: "PARCIAL",
     PARCIAL_TARDE: "PARCIAL_TARDE",
     MATUTINO: "MATUTINO",
@@ -68,6 +69,19 @@ const DOM = {
     novoCargo: () => document.getElementById('novo-cargo'),
     novoCategoria: () => document.getElementById('novo-categoria'),
     novoTurno: () => document.getElementById('novo-turno'),
+    // Modal Cabeçalho
+    modalCabecalho: () => document.getElementById('modalCabecalho'),
+    cabNomeEscola: () => document.getElementById('cab-nome-escola'),
+    cabEndereco: () => document.getElementById('cab-endereco'),
+    cabEmailCnpj: () => document.getElementById('cab-email-cnpj'),
+    cabDiretoraNome: () => document.getElementById('cab-diretora-nome'),
+    cabDiretoraCargo: () => document.getElementById('cab-diretora-cargo'),
+    // Modal Turno Customizado
+    modalTurnoCustom: () => document.getElementById('modalTurnoCustom'),
+    customEntradaMat: () => document.getElementById('custom-entrada-mat'),
+    customSaidaMat: () => document.getElementById('custom-saida-mat'),
+    customEntradaVesp: () => document.getElementById('custom-entrada-vesp'),
+    customSaidaVesp: () => document.getElementById('custom-saida-vesp'),
     // Login
     loginEmail: () => document.getElementById('login-email'),
     loginSenha: () => document.getElementById('login-senha'),
@@ -405,6 +419,7 @@ function carregarDadosDaNuvem() {
             esconderCarregamento();
             carregarListaServidores();
             carregarDadosEditaveis();
+            aplicarCabecalho(memoriaNuvem['configuracoes_cabecalho'] ? JSON.parse(memoriaNuvem['configuracoes_cabecalho']) : null);
             gerarFolha();
         })
         .catch((err) => {
@@ -435,6 +450,115 @@ function revelarBackup() {
         painel.classList.add('hidden');
         painel.style.display = 'none';
     }
+}
+
+// ============================================================
+// CABEÇALHO EDITÁVEL
+// ============================================================
+
+const CABECALHO_PADRAO = {
+    nomeEscola: 'CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL MARIA JANDIRA DE SOUSA FONSECA',
+    endereco: 'Rua Maria Madalena \u2013 Centro \u2013 Cep: 48.415-000 | Fátima - Bahia',
+    emailCnpj: 'E-mail: mariajandira2015@hotmail.com | CNPJ: 24.755.198/0001-81',
+    diretoraNome: 'JOSEFA MARCIANIA DO NASCIMENTO SILVA',
+    diretoraCargo: 'Diretora'
+};
+
+function aplicarCabecalho(dados) {
+    const cab = dados || CABECALHO_PADRAO;
+    const h3 = document.querySelector('.cabecalho-textos h3');
+    const ps = document.querySelectorAll('.cabecalho-textos p');
+    const assinaturaSpan = document.querySelector('.linha-assinatura span:first-child');
+    const assinaturaCargo = document.querySelector('.linha-assinatura .cargo-assinatura');
+
+    if (h3) h3.textContent = cab.nomeEscola || CABECALHO_PADRAO.nomeEscola;
+    if (ps[0]) ps[0].textContent = cab.endereco || CABECALHO_PADRAO.endereco;
+    if (ps[1]) ps[1].textContent = cab.emailCnpj || CABECALHO_PADRAO.emailCnpj;
+    if (assinaturaSpan) assinaturaSpan.textContent = cab.diretoraNome || CABECALHO_PADRAO.diretoraNome;
+    if (assinaturaCargo) assinaturaCargo.textContent = cab.diretoraCargo || CABECALHO_PADRAO.diretoraCargo;
+}
+
+function abrirModalCabecalho() {
+    const dados = memoriaNuvem['configuracoes_cabecalho']
+        ? JSON.parse(memoriaNuvem['configuracoes_cabecalho'])
+        : CABECALHO_PADRAO;
+
+    DOM.cabNomeEscola().value = dados.nomeEscola || CABECALHO_PADRAO.nomeEscola;
+    DOM.cabEndereco().value = dados.endereco || CABECALHO_PADRAO.endereco;
+    DOM.cabEmailCnpj().value = dados.emailCnpj || CABECALHO_PADRAO.emailCnpj;
+    DOM.cabDiretoraNome().value = dados.diretoraNome || CABECALHO_PADRAO.diretoraNome;
+    DOM.cabDiretoraCargo().value = dados.diretoraCargo || CABECALHO_PADRAO.diretoraCargo;
+
+    DOM.modalCabecalho().style.display = 'flex';
+}
+
+function fecharModalCabecalho() {
+    DOM.modalCabecalho().style.display = 'none';
+}
+
+function salvarCabecalho() {
+    const dados = {
+        nomeEscola: DOM.cabNomeEscola().value.trim().toUpperCase() || CABECALHO_PADRAO.nomeEscola,
+        endereco: DOM.cabEndereco().value.trim() || CABECALHO_PADRAO.endereco,
+        emailCnpj: DOM.cabEmailCnpj().value.trim() || CABECALHO_PADRAO.emailCnpj,
+        diretoraNome: DOM.cabDiretoraNome().value.trim().toUpperCase() || CABECALHO_PADRAO.diretoraNome,
+        diretoraCargo: DOM.cabDiretoraCargo().value.trim() || CABECALHO_PADRAO.diretoraCargo,
+    };
+
+    salvarNaNuvem('configuracoes_cabecalho', JSON.stringify(dados));
+    aplicarCabecalho(dados);
+    fecharModalCabecalho();
+    mostrarToast('✅ Cabeçalho atualizado com sucesso!', 'sucesso');
+}
+
+// ============================================================
+// TURNO CUSTOMIZADO
+// ============================================================
+
+function abrirModalTurnoCustom() {
+    const index = DOM.seletorServidor().value;
+    if (index === '') {
+        mostrarToast('⚠️ Selecione um servidor primeiro.', 'aviso');
+        return;
+    }
+
+    const servidor = bancoServidores[index];
+    const h = servidor.horarioCustom || {};
+
+    DOM.customEntradaMat().value = h.entradaMat || '';
+    DOM.customSaidaMat().value = h.saidaMat || '';
+    DOM.customEntradaVesp().value = h.entradaVesp || '';
+    DOM.customSaidaVesp().value = h.saidaVesp || '';
+
+    DOM.modalTurnoCustom().style.display = 'flex';
+}
+
+function fecharModalTurnoCustom() {
+    DOM.modalTurnoCustom().style.display = 'none';
+}
+
+function salvarTurnoCustom() {
+    const index = DOM.seletorServidor().value;
+    if (index === '') return;
+
+    const entradaMat = DOM.customEntradaMat().value;
+    const saidaMat = DOM.customSaidaMat().value;
+    const entradaVesp = DOM.customEntradaVesp().value;
+    const saidaVesp = DOM.customSaidaVesp().value;
+
+    if (!entradaMat && !saidaMat && !entradaVesp && !saidaVesp) {
+        mostrarToast('⚠️ Preencha ao menos um horário.', 'aviso');
+        return;
+    }
+
+    bancoServidores[index].turno = TURNOS.CUSTOM;
+    bancoServidores[index].horarioCustom = { entradaMat, saidaMat, entradaVesp, saidaVesp };
+
+    salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
+    DOM.seletorTurno().value = TURNOS.CUSTOM;
+    fecharModalTurnoCustom();
+    gerarFolha();
+    mostrarToast('✅ Horários customizados aplicados!', 'sucesso');
 }
 
 // ============================================================
@@ -640,7 +764,13 @@ function desfazerUltimaAcao() {
 // GERAÇÃO DA FOLHA DE PONTO
 // ============================================================
 
-function obterCelulasHoras(turno) {
+function obterCelulasHoras(turno, servidor) {
+    if (turno === TURNOS.CUSTOM && servidor && servidor.horarioCustom) {
+        const h = servidor.horarioCustom;
+        const formatHora = (v) => v ? v : '---';
+        return `<td>${formatHora(h.entradaMat)}</td><td>${formatHora(h.saidaMat)}</td><td>${formatHora(h.entradaVesp)}</td><td>${formatHora(h.saidaVesp)}</td>`;
+    }
+
     const mapas = {
         [TURNOS.PARCIAL]: '<td>06:30</td><td>10:30</td><td>---</td><td>---</td>',
         [TURNOS.PARCIAL_TARDE]: '<td>---</td><td>---</td><td>11:40</td><td>15:40</td>',
@@ -745,7 +875,7 @@ function alternarFeriadoGeral(linhaElemento, ano, mes, diaNumero, celulaDiaHtml)
     removerDaNuvem(chaveAusencia);
 
     if (novoEstado === ESTADOS.NORMAL) {
-        linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + '<td></td>';
+        linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual, bancoServidores[DOM.seletorServidor().value]) + '<td></td>';
         removerDaNuvem(chave);
     } else {
         const dadosAntigos = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : {};
@@ -788,7 +918,8 @@ function alternarAusenciaIndividual(linhaElemento, ano, mes, diaNumero, evento, 
             linhaElemento.innerHTML = celulaDiaHtml + obterConteudoLinha(dadosGeral, 'geral', chaveGeral);
             linhaElemento.setAttribute('data-estado-geral', dadosGeral.estado);
         } else {
-            linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + '<td></td>';
+            const idxServidor = DOM.seletorServidor().value;
+            linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual, idxServidor !== '' ? bancoServidores[idxServidor] : null) + '<td></td>';
             linhaElemento.setAttribute('data-estado-geral', '0');
         }
         removerDaNuvem(chave);
@@ -870,7 +1001,7 @@ function criarLinhaSabado(dia, ano, mes, aberto) {
     return tr;
 }
 
-function criarLinhaDiaUtil(dia, ano, mes, turnoAtual, nomeAtual, isSabadoAberto) {
+function criarLinhaDiaUtil(dia, ano, mes, turnoAtual, nomeAtual, isSabadoAberto, servidor) {
     const tr = document.createElement('tr');
     tr.className = "dia-util";
     tr.setAttribute('tabindex', '0');
@@ -898,7 +1029,7 @@ function criarLinhaDiaUtil(dia, ano, mes, turnoAtual, nomeAtual, isSabadoAberto)
     } else {
         tr.setAttribute('data-estado-geral', '0');
         tr.setAttribute('data-estado-individual', '0');
-        tr.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual) + '<td></td>';
+        tr.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual, servidor) + '<td></td>';
     }
 
     tr.onclick = function () { alternarFeriadoGeral(this, ano, mes, dia, celulaDiaHtml); };
@@ -914,6 +1045,8 @@ function gerarFolha() {
     const ano = parseInt(DOM.selectAno().value);
     const turnoAtual = obterTurnoAtual();
     const nomeAtual = obterNomeAtual();
+    const idxServidor = DOM.seletorServidor().value;
+    const servidorAtual = idxServidor !== '' ? bancoServidores[idxServidor] : null;
 
     DOM.tituloPeriodo().textContent = `Folha de Ponto - Período: ${nomeMes} ${ano}`;
 
@@ -931,7 +1064,7 @@ function gerarFolha() {
         } else if (diaDaSemana === 6 && !isSabadoAberto) {
             tr = criarLinhaSabado(dia, ano, mes, false);
         } else {
-            tr = criarLinhaDiaUtil(dia, ano, mes, turnoAtual, nomeAtual, diaDaSemana === 6 && isSabadoAberto);
+            tr = criarLinhaDiaUtil(dia, ano, mes, turnoAtual, nomeAtual, diaDaSemana === 6 && isSabadoAberto, servidorAtual);
         }
 
         if (tr) corpoTabela.appendChild(tr);
@@ -1475,6 +1608,40 @@ document.addEventListener('DOMContentLoaded', function () {
     if (modalRelacao) {
         modalRelacao.addEventListener('click', function (e) {
             if (e.target === this) fecharModalRelacao();
+        });
+    }
+
+    // Modal Cabeçalho
+    const btnEditarCabecalho = document.getElementById('btn-editar-cabecalho');
+    if (btnEditarCabecalho) btnEditarCabecalho.addEventListener('click', abrirModalCabecalho);
+
+    const btnCancelarCabecalho = document.getElementById('btn-cancelar-cabecalho');
+    if (btnCancelarCabecalho) btnCancelarCabecalho.addEventListener('click', fecharModalCabecalho);
+
+    const btnSalvarCabecalho = document.getElementById('btn-salvar-cabecalho');
+    if (btnSalvarCabecalho) btnSalvarCabecalho.addEventListener('click', salvarCabecalho);
+
+    const modalCabecalho = document.getElementById('modalCabecalho');
+    if (modalCabecalho) {
+        modalCabecalho.addEventListener('click', function (e) {
+            if (e.target === this) fecharModalCabecalho();
+        });
+    }
+
+    // Modal Turno Customizado
+    const btnTurnoCustom = document.getElementById('btn-turno-custom');
+    if (btnTurnoCustom) btnTurnoCustom.addEventListener('click', abrirModalTurnoCustom);
+
+    const btnCancelarTurnoCustom = document.getElementById('btn-cancelar-turno-custom');
+    if (btnCancelarTurnoCustom) btnCancelarTurnoCustom.addEventListener('click', fecharModalTurnoCustom);
+
+    const btnSalvarTurnoCustom = document.getElementById('btn-salvar-turno-custom');
+    if (btnSalvarTurnoCustom) btnSalvarTurnoCustom.addEventListener('click', salvarTurnoCustom);
+
+    const modalTurnoCustom = document.getElementById('modalTurnoCustom');
+    if (modalTurnoCustom) {
+        modalTurnoCustom.addEventListener('click', function (e) {
+            if (e.target === this) fecharModalTurnoCustom();
         });
     }
 
