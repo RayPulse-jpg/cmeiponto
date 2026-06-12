@@ -764,33 +764,13 @@
             font-family: inherit;
             text-transform: uppercase;
             display: inline-block;
-            min-width: 30px;
+            min-width: 0;
             text-align: center;
         }
 
-        /* Colapsa o motivo quando vazio para não descentrar o rótulo */
-        .motivo-feriado:empty {
-            min-width: 0;
-            width: 0;
-            padding: 0;
-            border-bottom: none;
-            overflow: hidden;
-        }
-
-        .motivo-feriado:empty:focus {
-            min-width: 30px;
-            width: auto;
-            padding: 0 5px;
-            border-bottom: 1px dashed #999;
-            overflow: visible;
-        }
-
-        .motivo-feriado:empty:before {
-            content: " - CLIQUE PARA DESCREVER";
-            color: #718096;
-            font-style: italic;
-            font-weight: normal;
-            text-transform: none;
+        /* Esconde hint de tela — espaço em branco centrava errado o rótulo */
+        .motivo-feriado:empty::before {
+            content: "";
         }
 
         .assinaturas-rodape {
