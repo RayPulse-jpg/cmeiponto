@@ -1159,7 +1159,27 @@
                 display: block !important;
             }
 
-            body:not(.modo-lote):not(.modo-relacao) #folha-impressao {
+            /* Atena: impressão individual (aba ativa = atena) */
+            body[data-aba="atena"]:not(.modo-atena-lote) #folha-impressao {
+                display: none !important;
+            }
+
+            body[data-aba="atena"]:not(.modo-atena-lote) #folha-atena {
+                display: block !important;
+            }
+
+            /* Atena: impressão em lote */
+            body.modo-atena-lote #folha-impressao,
+            body.modo-atena-lote #folha-atena,
+            body.modo-atena-lote #print-wrapper {
+                display: none !important;
+            }
+
+            body.modo-atena-lote #print-wrapper-atena {
+                display: block !important;
+            }
+
+            body:not(.modo-lote):not(.modo-relacao):not([data-aba="atena"]):not(.modo-atena-lote) #folha-impressao {
                 display: block !important;
             }
 
@@ -1699,4 +1719,296 @@
             background-color: var(--input-bg);
             color: var(--text-main);
             border-color: var(--border-light);
-        }
+        }
+
+        /* ============================================================
+           ALTERNADOR DE ABAS (CMEI / EMPRESA)
+           ============================================================ */
+        .abas-folha {
+            display: flex;
+            gap: 6px;
+            max-width: 900px;
+            margin: 10px auto 0 auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        .btn-aba {
+            flex: 1;
+            padding: 10px 20px;
+            border: 2px solid var(--border-light, #e2e8f0);
+            border-radius: 8px 8px 0 0;
+            background: rgba(255,255,255,0.06);
+            color: var(--text-muted, #64748b);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-aba:hover {
+            background: rgba(255,255,255,0.14);
+            color: var(--text-main, #1e293b);
+        }
+
+        .btn-aba.ativo {
+            background: white;
+            color: #1e293b;
+            border-color: #e2e8f0;
+            border-bottom: 2px solid white;
+            box-shadow: 0 -3px 10px rgba(0,0,0,0.06);
+        }
+
+        [data-theme="dark"] .btn-aba {
+            background: rgba(30,41,59,0.4);
+            color: #94a3b8;
+            border-color: #334155;
+        }
+
+        [data-theme="dark"] .btn-aba.ativo {
+            background: var(--card-bg, #1e293b);
+            color: #f1f5f9;
+            border-color: #334155;
+            border-bottom-color: var(--card-bg, #1e293b);
+        }
+
+        /* ============================================================
+           BOTÃO LOTE EMPRESA
+           ============================================================ */
+        .btn-lote-atena {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            box-shadow: 0 3px 10px rgba(249,115,22,0.3);
+            transition: all 0.2s;
+        }
+
+        .btn-lote-atena:hover {
+            background: linear-gradient(135deg, #ea580c, #c2410c);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(249,115,22,0.4);
+        }
+
+        /* ============================================================
+           CHECKBOX ATENA NO MODAL DE CADASTRO
+           ============================================================ */
+        .checkbox-atena-container {
+            margin: 4px 0;
+        }
+
+        .checkbox-atena-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 10px 12px;
+            border: 2px solid #fed7aa;
+            border-radius: 8px;
+            background: #fff7ed;
+            font-size: 13px;
+            font-weight: 600;
+            color: #9a3412;
+            transition: all 0.2s;
+        }
+
+        .checkbox-atena-label:hover {
+            border-color: #fb923c;
+            background: #ffedd5;
+        }
+
+        .checkbox-atena-label input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #f97316;
+            flex-shrink: 0;
+        }
+
+        [data-theme="dark"] .checkbox-atena-label {
+            background: #1c0a00;
+            border-color: #7c2d12;
+            color: #fdba74;
+        }
+
+        /* ============================================================
+           CABEÇALHO DA FOLHA ATENA
+           ============================================================ */
+        .cabecalho-atena {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #1e293b;
+        }
+
+        .atena-header-textos {
+            flex: 1;
+        }
+
+        .atena-empregador-box {
+            display: inline-block;
+            border: 1.5px solid #1e293b;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #1e293b;
+        }
+
+        .cabecalho-atena h2 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 4px 0 2px 0;
+        }
+
+        .atena-titulo-unidade {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .atena-logo-container {
+            flex-shrink: 0;
+        }
+
+        .atena-logo-container img {
+            max-height: 72px;
+            max-width: 160px;
+            object-fit: contain;
+        }
+
+        /* ============================================================
+           BOX DE EMPREGADO ATENA
+           ============================================================ */
+        .atena-empregado-container {
+            border: 1.5px solid #1e293b;
+            margin-bottom: 12px;
+        }
+
+        .atena-empregado-header {
+            background: #e2e8f0;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #1e293b;
+            border-bottom: 1px solid #1e293b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .atena-tabela-info {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            color: #1e293b;
+        }
+
+        .atena-tabela-info td {
+            padding: 5px 10px;
+            border-right: 1px solid #cbd5e1;
+            font-weight: 600;
+        }
+
+        .atena-tabela-info tr:first-child td:last-child {
+            border-right: none;
+        }
+
+        .atena-tabela-info tr + tr td {
+            border-top: 1px solid #cbd5e1;
+        }
+
+        /* ============================================================
+           TABELA PRINCIPAL DA FOLHA ATENA
+           ============================================================ */
+        .tabela-atena {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            color: #1e293b;
+        }
+
+        .tabela-atena th {
+            background: #1e293b;
+            color: white;
+            padding: 6px 4px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid #334155;
+            vertical-align: middle;
+        }
+
+        .tabela-atena td {
+            border: 1px solid #cbd5e1;
+            padding: 3px 6px;
+            text-align: center;
+            height: 26px;
+            vertical-align: middle;
+        }
+
+        .tabela-atena td:first-child {
+            font-weight: 700;
+            background: #f8fafc;
+            width: 32px;
+        }
+
+        .tabela-atena td:last-child {
+            text-align: left;
+        }
+
+        .tabela-atena .fim-de-semana {
+            background-color: #b0b0b0 !important;
+            color: #1e293b;
+        }
+
+        .tabela-atena .linha-individual {
+            background-color: #fef9c3 !important;
+        }
+
+        /* Dark mode Atena */
+        [data-theme="dark"] .cabecalho-atena,
+        [data-theme="dark"] .atena-empregador-box,
+        [data-theme="dark"] .atena-tabela-info,
+        [data-theme="dark"] .tabela-atena {
+            color: #1e293b;
+        }
+
+        [data-theme="dark"] .atena-empregado-container {
+            border-color: #334155;
+        }
+
+        [data-theme="dark"] .atena-empregado-header {
+            background: #334155;
+            color: #f1f5f9;
+            border-color: #475569;
+        }
+
+        /* Print adjustments for Atena */
+        @media print {
+            .tabela-atena td {
+                height: 23px !important;
+                padding: 0 3px !important;
+                font-size: 11px !important;
+            }
+
+            .tabela-atena th {
+                padding: 3px !important;
+                font-size: 10px !important;
+            }
+
+            #print-wrapper-atena {
+                display: none;
+                width: 100%;
+            }
+        }
+
