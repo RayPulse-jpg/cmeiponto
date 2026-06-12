@@ -477,6 +477,10 @@ function aplicarCabecalho(dados) {
     if (ps[1]) ps[1].textContent = cab.emailCnpj || CABECALHO_PADRAO.emailCnpj;
     if (assinaturaSpan) assinaturaSpan.textContent = cab.diretoraNome || CABECALHO_PADRAO.diretoraNome;
     if (assinaturaCargo) assinaturaCargo.textContent = cab.diretoraCargo || CABECALHO_PADRAO.diretoraCargo;
+
+    // Também atualiza na folha Atena
+    const atenaAssinaturaSpan = document.getElementById('atena-diretora-nome');
+    if (atenaAssinaturaSpan) atenaAssinaturaSpan.textContent = cab.diretoraNome || CABECALHO_PADRAO.diretoraNome;
 }
 
 function abrirModalCabecalho() {
