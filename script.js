@@ -63,6 +63,7 @@ const DOM = {
     statusNuvem: () => document.getElementById('status-nuvem'),
     buscaServidor: () => document.getElementById('busca-servidor'),
     resumoFolha: () => document.getElementById('resumo-folha'),
+    editarAtena: () => document.getElementById('editar-atena'),
     // Campos do modal
     novoNome: () => document.getElementById('novo-nome'),
     novoCpf: () => document.getElementById('novo-cpf'),
@@ -604,7 +605,8 @@ function carregarListaServidores(filtroTexto = '') {
 
         const opcao = document.createElement('option');
         opcao.value = index;
-        opcao.text = servidor.nome + cpfMascarado;
+        const prefixoAtena = servidor.atena ? "🏢 " : "";
+        opcao.text = prefixoAtena + servidor.nome + cpfMascarado;
         if (optGroupAtual) optGroupAtual.appendChild(opcao);
         else seletor.appendChild(opcao);
     });
@@ -612,17 +614,26 @@ function carregarListaServidores(filtroTexto = '') {
 
 function preencherServidor() {
     const index = DOM.seletorServidor().value;
+    const checkAtena = DOM.editarAtena();
     if (index !== "") {
         const servidor = bancoServidores[index];
         DOM.servidorNome().textContent = servidor.nome;
         DOM.servidorCpf().textContent = servidor.cpf;
         DOM.servidorCargo().textContent = servidor.cargo;
         DOM.seletorTurno().value = servidor.turno || TURNOS.MANUAL;
+        if (checkAtena) {
+            checkAtena.checked = servidor.atena || false;
+            checkAtena.disabled = false;
+        }
     } else {
         DOM.servidorNome().textContent = SERVIDOR_PADRAO.nome;
         DOM.servidorCpf().textContent = SERVIDOR_PADRAO.cpf;
         DOM.servidorCargo().textContent = SERVIDOR_PADRAO.cargo;
         DOM.seletorTurno().value = TURNOS.MANUAL;
+        if (checkAtena) {
+            checkAtena.checked = false;
+            checkAtena.disabled = true;
+        }
     }
     gerarFolha();
 }
@@ -635,6 +646,27 @@ function atualizarTurno() {
     if (bancoServidores[index].turno !== novoTurno) {
         bancoServidores[index].turno = novoTurno;
         salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
+        gerarFolha();
+    }
+}
+
+function atualizarAtena() {
+    const index = DOM.seletorServidor().value;
+    if (index === "") return;
+    const checkAtena = DOM.editarAtena();
+    if (!checkAtena) return;
+
+    const novoAtena = checkAtena.checked;
+    if (bancoServidores[index].atena !== novoAtena) {
+        bancoServidores[index].atena = novoAtena;
+        salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
+        
+        // Re-popula a lista de servidores para atualizar o indicador no dropdown sem perder a seleção
+        const valorSelecionado = index;
+        const buscaFiltro = DOM.buscaServidor() ? DOM.buscaServidor().value : '';
+        carregarListaServidores(buscaFiltro);
+        DOM.seletorServidor().value = valorSelecionado;
+        
         gerarFolha();
     }
 }
@@ -1825,6 +1857,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Seletor de turno
     const seletorTurno = DOM.seletorTurno();
     if (seletorTurno) seletorTurno.addEventListener('change', atualizarTurno);
+
+    // Checkbox de editar status Atena
+    const editarAtena = DOM.editarAtena();
+    if (editarAtena) editarAtena.addEventListener('change', atualizarAtena);
 
     // Seletores de mês e ano
     const selectMes = DOM.selectMes();

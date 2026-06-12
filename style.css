@@ -91,8 +91,8 @@
         }
 
         [data-theme="dark"] .destaque-turno {
-            background-color: #2d1b69;
-            border-color: #8b5cf6;
+            background-color: #115e59;
+            border-color: #14b8a6;
         }
 
         [data-theme="dark"] .linha-individual {
@@ -259,8 +259,8 @@
         }
 
         .destaque-turno {
-            border-color: #8b5cf6;
-            background-color: #f5f3ff;
+            border-color: #0d9488;
+            background-color: #f0fdfa;
             font-weight: 600;
         }
 
@@ -366,16 +366,16 @@
            BOTÃO RELAÇÃO DE FUNCIONÁRIOS
            ============================================================ */
         .btn-relacao {
-            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
             color: white;
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.35);
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.35);
             white-space: nowrap;
         }
 
         .btn-relacao:hover {
-            background: linear-gradient(135deg, #6d28d9, #9333ea);
+            background: linear-gradient(135deg, #1e40af, #2563eb);
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.45);
+            box-shadow: 0 6px 16px rgba(29, 78, 216, 0.45);
         }
 
         /* Modal relação maior */
@@ -446,10 +446,10 @@
         }
 
         .relacao-preview-setor {
-            background: linear-gradient(to right, #ede9fe, #f5f3ff) !important;
+            background: linear-gradient(to right, #e0f2fe, #f0f9ff) !important;
             font-weight: 700;
             font-size: 11px;
-            color: #5b21b6 !important;
+            color: #0369a1 !important;
             text-transform: uppercase;
             letter-spacing: 1px;
             padding: 5px 10px !important;
@@ -464,12 +464,12 @@
 
         /* Botão imprimir relação */
         .btn-imprimir-relacao {
-            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
             color: white;
         }
 
         .btn-imprimir-relacao:hover {
-            background: linear-gradient(135deg, #6d28d9, #9333ea);
+            background: linear-gradient(135deg, #1e40af, #2563eb);
         }
 
         /* ============================================================
@@ -1021,15 +1021,15 @@
 
         .login-form-area input:focus {
             outline: none;
-            border-color: #8b5cf6;
+            border-color: #0d9488;
             background-color: #fff;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
         }
 
         .btn-login-gradient {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(to right, #8b5cf6, #d946ef);
+            background: linear-gradient(to right, #0d9488, #06b6d4);
             color: white;
             border: none;
             border-radius: 8px;
@@ -1042,8 +1042,8 @@
 
         .btn-login-gradient:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(217, 70, 239, 0.3);
-            background: linear-gradient(to right, #7c3aed, #c026d3);
+            box-shadow: 0 10px 20px rgba(6, 182, 212, 0.3);
+            background: linear-gradient(to right, #0d9488, #0891b2);
         }
 
         /* Responsividade para Telas Menores */
