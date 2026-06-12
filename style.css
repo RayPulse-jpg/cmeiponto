@@ -768,6 +768,23 @@
             text-align: center;
         }
 
+        /* Colapsa o motivo quando vazio para não descentrar o rótulo */
+        .motivo-feriado:empty {
+            min-width: 0;
+            width: 0;
+            padding: 0;
+            border-bottom: none;
+            overflow: hidden;
+        }
+
+        .motivo-feriado:empty:focus {
+            min-width: 30px;
+            width: auto;
+            padding: 0 5px;
+            border-bottom: 1px dashed #999;
+            overflow: visible;
+        }
+
         .motivo-feriado:empty:before {
             content: " - CLIQUE PARA DESCREVER";
             color: #718096;
@@ -1938,18 +1955,18 @@
         }
 
         .tabela-atena th {
-            background: #1e293b;
-            color: white;
+            background-color: #f0f0f0;
+            color: #000;
             padding: 6px 4px;
             text-align: center;
             font-size: 11px;
             font-weight: 600;
-            border: 1px solid #334155;
+            border: 1px solid #000;
             vertical-align: middle;
         }
 
         .tabela-atena td {
-            border: 1px solid #cbd5e1;
+            border: 1px solid #000;
             padding: 3px 6px;
             text-align: center;
             height: 26px;
@@ -1966,13 +1983,14 @@
             text-align: left;
         }
 
+        /* Herda as mesmas cores da tabela CMEI */
         .tabela-atena .fim-de-semana {
-            background-color: #b0b0b0 !important;
-            color: #1e293b;
+            background-color: #e2e8f0 !important;
+            color: #000;
         }
 
         .tabela-atena .linha-individual {
-            background-color: #fef9c3 !important;
+            background-color: #e2e8f0 !important;
         }
 
         /* Dark mode Atena */
