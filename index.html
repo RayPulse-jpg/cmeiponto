@@ -38,6 +38,7 @@
             <button id="btn-tema" class="btn-acao-topo" aria-label="Alternar modo escuro" title="Modo Escuro">🌙</button>
             <button class="btn-imprimir" aria-label="Imprimir página atual">🖨️ Imprimir Atual</button>
             <button class="btn-lote" aria-label="Imprimir todos os servidores em lote">🖨️ Imprimir em Lote</button>
+            <button class="btn-lote-atena" id="btn-lote-atena" aria-label="Imprimir funcionários Atena em lote" title="Imprimir lote da Empresa (Atena)">🏢 Lote Empresa</button>
             <button class="btn-relacao" id="btn-relacao" aria-label="Imprimir relação de funcionários por setor" title="Imprimir Relação de Funcionários">📋 Relação</button>
             <button class="btn-sair" title="Sair com Segurança" aria-label="Sair do sistema">Sair 🔒</button>
             <button class="btn-backup" title="Administrador" aria-label="Abrir opções de administrador">⚙️ Opções</button>
@@ -129,6 +130,12 @@
         </div>
     </div>
 
+    <!-- Alternador de Abas -->
+    <div class="abas-folha esconder-impressao">
+        <button class="btn-aba ativo" id="btn-aba-cmei" data-aba="cmei">📋 Folha CMEI</button>
+        <button class="btn-aba" id="btn-aba-atena" data-aba="atena">🏢 Folha Empresa (Atena)</button>
+    </div>
+
     <div id="modalAdd" class="modal-overlay">
         <div class="modal-content">
             <h3>Cadastrar Novo Servidor</h3>
@@ -151,6 +158,12 @@
                 <option value="VESPERTINO">Horário: Vespertino (13h-17h)</option>
                 <option value="INTEGRAL">Horário: Integral (08h-17h)</option>
             </select>
+            <div class="checkbox-atena-container">
+                <label class="checkbox-atena-label">
+                    <input type="checkbox" id="novo-atena">
+                    <span>🏢 Funcionário da Empresa (Atena Locação)</span>
+                </label>
+            </div>
             <div class="modal-botoes">
                 <button class="btn-cancelar">Cancelar</button>
                 <button class="btn-add">Salvar na Nuvem</button>
@@ -263,6 +276,7 @@
     <div id="relacao-impressao" style="display:none;"></div>
 
     <div id="print-wrapper"></div>
+    <div id="print-wrapper-atena"></div>
 
     <div class="folha-container" id="folha-impressao">
         <div class="cabecalho-container">
@@ -326,6 +340,57 @@
             </div>
         </div>
         
+    </div>
+
+    <!-- ============================================================
+         FOLHA DE PONTO - EMPRESA (ATENA)
+         ============================================================ -->
+    <div class="folha-container folha-atena" id="folha-atena" style="display:none;">
+
+        <div class="cabecalho-atena">
+            <div class="atena-header-textos">
+                <div class="atena-empregador-box">Empregador(a) Atena Locação e Mão de Obra</div>
+                <h2 id="atena-titulo-periodo">Folha de Ponto – Referente ao mês de: JUNHO 2026</h2>
+                <h3 class="atena-titulo-unidade">SEC. DE EDUCAÇÃO (MARIA JANDIRA)</h3>
+            </div>
+            <div class="atena-logo-container">
+                <img src="logo-atena.png" alt="Logo Atena" onerror="this.style.display='none'">
+            </div>
+        </div>
+
+        <div class="atena-empregado-container">
+            <div class="atena-empregado-header">Empregado(a)</div>
+            <table class="atena-tabela-info">
+                <tr>
+                    <td>NOME: <span id="atena-servidor-nome">SELECIONE NA LISTA ACIMA</span></td>
+                    <td>CPF: <span id="atena-servidor-cpf">000.000.000-00</span></td>
+                </tr>
+                <tr>
+                    <td colspan="2">FUNÇÃO: <span id="atena-servidor-cargo">...</span></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="aviso-clique">💡 DICA: Clique <b>ESQUERDO</b> para Recessos. Clique <b>DIREITO</b> para Atestados.
+            Clique num <b>SÁBADO</b> para abrir a linha. <b>Ctrl+Z</b> para desfazer!</div>
+
+        <table class="tabela-atena">
+            <thead>
+                <tr>
+                    <th>Dia</th>
+                    <th>Entrada</th>
+                    <th>Início do<br>Intervalo</th>
+                    <th>Fim do<br>Intervalo</th>
+                    <th>Saída</th>
+                    <th>Hora<br>Extra</th>
+                    <th style="width: 42%;">Assinatura do Empregado(a)</th>
+                </tr>
+            </thead>
+            <tbody id="corpo-tabela-atena"></tbody>
+        </table>
+
+        <div id="resumo-folha-atena" class="resumo-folha"></div>
+
     </div>
 
     <!-- Toast Container -->

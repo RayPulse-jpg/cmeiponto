@@ -679,6 +679,8 @@ function fecharModal() {
     ['novo-nome', 'novo-cpf', 'novo-cargo'].forEach(id => document.getElementById(id).value = '');
     DOM.novoCategoria().value = '';
     DOM.novoTurno().value = TURNOS.MANUAL;
+    const checkAtena = document.getElementById('novo-atena');
+    if (checkAtena) checkAtena.checked = false;
 }
 
 function salvarNovoServidor() {
@@ -701,7 +703,8 @@ function salvarNovoServidor() {
         return;
     }
 
-    bancoServidores.push({ nome, cpf, cargo, categoria, turno });
+    const atena = document.getElementById('novo-atena') ? document.getElementById('novo-atena').checked : false;
+    bancoServidores.push({ nome, cpf, cargo, categoria, turno, atena });
     organizarEOrdenarServidores();
     salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
     carregarListaServidores();
@@ -1071,6 +1074,289 @@ function gerarFolha() {
     }
 
     atualizarResumo();
+    gerarFolhaAtena();
+}
+
+// ============================================================
+// FOLHA ATENA - FUNÇÕES
+// ============================================================
+
+function obterCelulasHorasAtena(turno, servidor) {
+    if (turno === TURNOS.CUSTOM && servidor && servidor.horarioCustom) {
+        const h = servidor.horarioCustom;
+        const ambos = h.entradaMat && h.saidaMat && h.entradaVesp && h.saidaVesp;
+        const entrada = h.entradaMat || h.entradaVesp || '---';
+        const saida = h.saidaVesp || h.saidaMat || '---';
+        const inicioInt = ambos ? h.saidaMat : '---';
+        const fimInt = ambos ? h.entradaVesp : '---';
+        return `<td>${entrada}</td><td>${inicioInt}</td><td>${fimInt}</td><td>${saida}</td><td></td>`;
+    }
+    const mapas = {
+        [TURNOS.INTEGRAL]:      '<td>08:00</td><td>12:00</td><td>13:00</td><td>17:00</td><td></td>',
+        [TURNOS.MATUTINO]:      '<td>08:00</td><td>---</td><td>---</td><td>12:00</td><td></td>',
+        [TURNOS.VESPERTINO]:    '<td>13:00</td><td>---</td><td>---</td><td>17:00</td><td></td>',
+        [TURNOS.PARCIAL]:       '<td>06:30</td><td>---</td><td>---</td><td>10:30</td><td></td>',
+        [TURNOS.PARCIAL_TARDE]: '<td>11:40</td><td>---</td><td>---</td><td>15:40</td><td></td>',
+    };
+    return mapas[turno] || '<td></td><td></td><td></td><td></td><td></td>';
+}
+
+function obterConteudoLinhaAtena(dados, tipo, chave) {
+    let rotuloPadrao;
+    if (tipo === 'geral') {
+        rotuloPadrao = (dados.estado === ESTADOS.JUSTIFICADA) ? ROTULOS.feriado : ROTULOS.pontoFacultativo;
+    } else {
+        rotuloPadrao = (dados.estado === ESTADOS.JUSTIFICADA) ? ROTULOS.faltaJustificada : ROTULOS.atestadoMedico;
+    }
+    const rotuloExibido = dados.rotulo || rotuloPadrao;
+    const classe = tipo === 'geral' ? 'fim-de-semana' : 'linha-individual';
+    const chaveSafe = escapeHtml(chave);
+    return `<td colspan="6" class="${classe}">
+                <span class="rotulo-editavel" data-chave="${chaveSafe}" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarRotulo(this)">${escapeHtml(rotuloExibido)}</span>
+                <span class="motivo-feriado" data-chave="${chaveSafe}" contenteditable="true" spellcheck="false" onclick="event.stopPropagation()" oninput="salvarMotivo(this)">${escapeHtml(dados.motivo || '')}</span>
+            </td>`;
+}
+
+function criarLinhaDomingoAtena(dia) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${dia}</td><td colspan="6" class="fim-de-semana">DOMINGO</td>`;
+    return tr;
+}
+
+function criarLinhaSabadoAtena(dia, ano, mes) {
+    const tr = document.createElement('tr');
+    tr.className = 'dia-util';
+    tr.innerHTML = `<td>${dia}</td><td colspan="6" class="fim-de-semana" style="color: #2B6CB0;">
+        <span class="esconder-impressao" style="text-decoration: underline; cursor: pointer;">SÁBADO (Clique para abrir)</span>
+        <span class="mostrar-impressao">SÁBADO</span>
+    </td>`;
+    tr.onclick = function () { toggleSabado(ano, mes, dia); };
+    return tr;
+}
+
+function alternarFeriadoGeralAtena(linhaElemento, ano, mes, diaNumero, celulaDiaHtml) {
+    const estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-geral') || '0');
+    const novoEstado = (estadoAtual + 1) % 3;
+    linhaElemento.setAttribute('data-estado-geral', novoEstado);
+    linhaElemento.setAttribute('data-estado-individual', '0');
+
+    const turnoAtual = obterTurnoAtual();
+    const nomeAtual = obterNomeAtual();
+    const chave = `feriado_${ano}_${mes}_${diaNumero}`;
+    const chaveAusencia = `ausencia_${nomeAtual}_${ano}_${mes}_${diaNumero}`;
+
+    registrarAcao(chave, memoriaNuvem[chave] || null);
+    registrarAcao(chaveAusencia, memoriaNuvem[chaveAusencia] || null);
+    removerDaNuvem(chaveAusencia);
+
+    if (novoEstado === ESTADOS.NORMAL) {
+        const idxServidor = DOM.seletorServidor().value;
+        linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHorasAtena(turnoAtual, idxServidor !== '' ? bancoServidores[idxServidor] : null) + '<td></td>';
+        removerDaNuvem(chave);
+    } else {
+        const dadosAntigos = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : {};
+        const novoRotulo = (dadosAntigos.estado === novoEstado) ? (dadosAntigos.rotulo || '') : '';
+        const dados = { estado: novoEstado, motivo: dadosAntigos.motivo || '', rotulo: novoRotulo };
+        linhaElemento.innerHTML = celulaDiaHtml + obterConteudoLinhaAtena(dados, 'geral', chave);
+        salvarNaNuvem(chave, JSON.stringify(dados));
+    }
+
+    mostrarTooltip(linhaElemento, obterTextoEstado(novoEstado, 'geral'));
+    atualizarResumo();
+}
+
+function alternarAusenciaIndividualAtena(linhaElemento, ano, mes, diaNumero, evento, celulaDiaHtml) {
+    evento.preventDefault();
+    const turnoAtual = obterTurnoAtual();
+    const nomeAtual = obterNomeAtual();
+
+    if (nomeAtual === SERVIDOR_PADRAO.nome || nomeAtual === '') {
+        mostrarToast('⚠️ Selecione um servidor primeiro.', 'aviso');
+        return;
+    }
+
+    const estadoAtual = parseInt(linhaElemento.getAttribute('data-estado-individual') || '0');
+    const novoEstado = (estadoAtual + 1) % 3;
+    linhaElemento.setAttribute('data-estado-individual', novoEstado);
+
+    const chave = `ausencia_${nomeAtual}_${ano}_${mes}_${diaNumero}`;
+    registrarAcao(chave, memoriaNuvem[chave] || null);
+
+    if (novoEstado === ESTADOS.NORMAL) {
+        const temFeriadoGeral = memoriaNuvem[`feriado_${ano}_${mes}_${diaNumero}`];
+        if (temFeriadoGeral) {
+            const dadosGeral = JSON.parse(temFeriadoGeral);
+            const chaveGeral = `feriado_${ano}_${mes}_${diaNumero}`;
+            linhaElemento.innerHTML = celulaDiaHtml + obterConteudoLinhaAtena(dadosGeral, 'geral', chaveGeral);
+            linhaElemento.setAttribute('data-estado-geral', dadosGeral.estado);
+        } else {
+            const idxServidor = DOM.seletorServidor().value;
+            linhaElemento.innerHTML = celulaDiaHtml + obterCelulasHorasAtena(turnoAtual, idxServidor !== '' ? bancoServidores[idxServidor] : null) + '<td></td>';
+            linhaElemento.setAttribute('data-estado-geral', '0');
+        }
+        removerDaNuvem(chave);
+    } else {
+        const dadosAntigos = memoriaNuvem[chave] ? JSON.parse(memoriaNuvem[chave]) : {};
+        const novoRotulo = (dadosAntigos.estado === novoEstado) ? (dadosAntigos.rotulo || '') : '';
+        const dados = { estado: novoEstado, motivo: dadosAntigos.motivo || '', rotulo: novoRotulo };
+        linhaElemento.innerHTML = celulaDiaHtml + obterConteudoLinhaAtena(dados, 'individual', chave);
+        salvarNaNuvem(chave, JSON.stringify(dados));
+    }
+
+    mostrarTooltip(linhaElemento, obterTextoEstado(novoEstado, 'individual'));
+    atualizarResumo();
+}
+
+function criarLinhaDiaUtilAtena(dia, ano, mes, turnoAtual, nomeAtual, isSabadoAberto, servidor) {
+    const tr = document.createElement('tr');
+    tr.className = 'dia-util';
+    tr.setAttribute('tabindex', '0');
+    tr.setAttribute('role', 'button');
+
+    const chaveGeral = `feriado_${ano}_${mes}_${dia}`;
+    const chaveIndiv = `ausencia_${nomeAtual}_${ano}_${mes}_${dia}`;
+    const dadosGeral = memoriaNuvem[chaveGeral];
+    const dadosIndiv = memoriaNuvem[chaveIndiv];
+
+    let celulaDiaHtml = `<td>${dia}`;
+    if (isSabadoAberto) {
+        celulaDiaHtml += ` <span class="esconder-impressao" style="cursor: pointer; color: #e53e3e; font-size: 11px; font-weight: bold;" onclick="event.stopPropagation(); toggleSabado(${ano}, ${mes}, ${dia})" title="Fechar Sábado">⮌</span>`;
+    }
+    celulaDiaHtml += '</td>';
+
+    if (dadosIndiv) {
+        const info = JSON.parse(dadosIndiv);
+        tr.setAttribute('data-estado-individual', info.estado);
+        tr.innerHTML = celulaDiaHtml + obterConteudoLinhaAtena(info, 'individual', chaveIndiv);
+    } else if (dadosGeral) {
+        const info = JSON.parse(dadosGeral);
+        tr.setAttribute('data-estado-geral', info.estado);
+        tr.innerHTML = celulaDiaHtml + obterConteudoLinhaAtena(info, 'geral', chaveGeral);
+    } else {
+        tr.setAttribute('data-estado-geral', '0');
+        tr.setAttribute('data-estado-individual', '0');
+        tr.innerHTML = celulaDiaHtml + obterCelulasHorasAtena(turnoAtual, servidor) + '<td></td>';
+    }
+
+    tr.onclick = function () { alternarFeriadoGeralAtena(this, ano, mes, dia, celulaDiaHtml); };
+    tr.oncontextmenu = function (evento) { alternarAusenciaIndividualAtena(this, ano, mes, dia, evento, celulaDiaHtml); };
+
+    return tr;
+}
+
+function gerarFolhaAtena() {
+    const corpoTabelaAtena = document.getElementById('corpo-tabela-atena');
+    if (!corpoTabelaAtena) return;
+
+    const selectMes = DOM.selectMes();
+    const mes = parseInt(selectMes.value);
+    const nomeMes = selectMes.options[selectMes.selectedIndex].text;
+    const ano = parseInt(DOM.selectAno().value);
+    const turnoAtual = obterTurnoAtual();
+    const nomeAtual = obterNomeAtual();
+    const idxServidor = DOM.seletorServidor().value;
+    const servidorAtual = idxServidor !== '' ? bancoServidores[idxServidor] : null;
+
+    const tituloPeriodo = document.getElementById('atena-titulo-periodo');
+    if (tituloPeriodo) tituloPeriodo.textContent = `Folha de Ponto – Referente ao mês de: ${nomeMes} ${ano}`;
+
+    const elNome = document.getElementById('atena-servidor-nome');
+    const elCpf = document.getElementById('atena-servidor-cpf');
+    const elCargo = document.getElementById('atena-servidor-cargo');
+    if (elNome) elNome.textContent = DOM.servidorNome().textContent;
+    if (elCpf) elCpf.textContent = DOM.servidorCpf().textContent;
+    if (elCargo) elCargo.textContent = DOM.servidorCargo().textContent;
+
+    corpoTabelaAtena.innerHTML = '';
+    const diasNoMes = new Date(ano, mes, 0).getDate();
+
+    for (let dia = 1; dia <= diasNoMes; dia++) {
+        const diaDaSemana = new Date(ano, mes - 1, dia).getDay();
+        const isSabadoAberto = memoriaNuvem[`sabado_aberto_${ano}_${mes}_${dia}`] === '1';
+        let tr;
+
+        if (diaDaSemana === 0) {
+            tr = criarLinhaDomingoAtena(dia);
+        } else if (diaDaSemana === 6 && !isSabadoAberto) {
+            tr = criarLinhaSabadoAtena(dia, ano, mes);
+        } else {
+            tr = criarLinhaDiaUtilAtena(dia, ano, mes, turnoAtual, nomeAtual, diaDaSemana === 6 && isSabadoAberto, servidorAtual);
+        }
+
+        if (tr) corpoTabelaAtena.appendChild(tr);
+    }
+
+    const resumoAtena = document.getElementById('resumo-folha-atena');
+    const resumoCmei = DOM.resumoFolha();
+    if (resumoAtena && resumoCmei) resumoAtena.innerHTML = resumoCmei.innerHTML;
+}
+
+function alternarAbas(aba) {
+    document.body.setAttribute('data-aba', aba);
+    const folhaCmei = document.getElementById('folha-impressao');
+    const folhaAtena = document.getElementById('folha-atena');
+    if (folhaCmei) folhaCmei.style.display = aba === 'cmei' ? '' : 'none';
+    if (folhaAtena) folhaAtena.style.display = aba === 'atena' ? '' : 'none';
+    document.querySelectorAll('.btn-aba').forEach(btn => {
+        btn.classList.toggle('ativo', btn.dataset.aba === aba);
+    });
+    if (aba === 'atena') gerarFolhaAtena();
+}
+
+function imprimirLoteAtena() {
+    const servidoresAtena = bancoServidores.filter(s => s.atena === true);
+    if (servidoresAtena.length === 0) {
+        mostrarToast('⚠️ Nenhum funcionário marcado como Atena! Edite o cadastro e marque o checkbox.', 'aviso');
+        return;
+    }
+
+    mostrarCarregamento('🖨️ Preparando impressão em lote (Empresa)...');
+
+    const buscaEl = DOM.buscaServidor();
+    const buscaAnterior = buscaEl ? buscaEl.value : '';
+    const indiceOriginal = DOM.seletorServidor().value;
+
+    if (buscaEl) buscaEl.value = '';
+    carregarListaServidores('');
+
+    const printWrapperAtena = document.getElementById('print-wrapper-atena');
+    printWrapperAtena.innerHTML = '';
+    document.body.classList.add('modo-atena-lote');
+
+    for (let i = 0; i < bancoServidores.length; i++) {
+        if (!bancoServidores[i].atena) continue;
+
+        DOM.seletorServidor().value = i;
+        preencherServidor();
+        gerarFolhaAtena();
+
+        const cloneArea = document.getElementById('folha-atena').cloneNode(true);
+        cloneArea.removeAttribute('id');
+        cloneArea.style.display = '';
+        cloneArea.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+        const resumoClone = cloneArea.querySelector('.resumo-folha');
+        if (resumoClone) resumoClone.remove();
+        const avisoClone = cloneArea.querySelector('.aviso-clique');
+        if (avisoClone) avisoClone.remove();
+        cloneArea.classList.add('quebra-pagina');
+        printWrapperAtena.appendChild(cloneArea);
+    }
+
+    setTimeout(() => {
+        window.print();
+        esconderCarregamento();
+    }, 500);
+
+    window.onafterprint = function () {
+        document.body.classList.remove('modo-atena-lote');
+        printWrapperAtena.innerHTML = '';
+        if (buscaEl) buscaEl.value = buscaAnterior;
+        carregarListaServidores(buscaAnterior);
+        DOM.seletorServidor().value = indiceOriginal || '';
+        preencherServidor();
+        gerarFolha();
+        window.onafterprint = null;
+    };
 }
 
 // ============================================================
@@ -1674,4 +1960,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const loginSenha = DOM.loginSenha();
     if (loginSenha) loginSenha.addEventListener('keypress', (e) => { if (e.key === 'Enter') fazerLogin(); });
+
+    // Alternador de abas CMEI / Atena
+    document.querySelectorAll('.btn-aba').forEach(btn => {
+        btn.addEventListener('click', function () {
+            alternarAbas(this.dataset.aba);
+        });
+    });
+
+    // Impressão em lote da Empresa (Atena)
+    const btnLoteAtena = document.getElementById('btn-lote-atena');
+    if (btnLoteAtena) btnLoteAtena.addEventListener('click', imprimirLoteAtena);
 });
+
