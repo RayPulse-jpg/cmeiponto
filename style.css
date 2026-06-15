@@ -1280,17 +1280,11 @@
             }
 
             .area-carimbo {
-                border: 1px dashed #475569 !important;
-                height: 52px !important;
-                margin-top: 5px !important;
-                border-radius: 4px !important;
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
+                display: none !important;
             }
 
             .label-carimbo {
-                color: #475569 !important;
-                font-size: 8px !important;
+                display: none !important;
             }
 
             /* ── RESUMO ── */
