@@ -190,16 +190,17 @@
 
         .box-controle {
             flex: 1;
-            min-width: 160px;
+            min-width: 250px;
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
 
-        /* Filtro de setor nao precisa ser tao largo */
-        .box-controle:has(#filtro-setor) {
-            max-width: 190px;
-            flex: 0 0 190px;
+        /* Filtro de setor: largura menor para nao sufocar o turno */
+        .box-controle-setor {
+            flex: 0 0 185px !important;
+            min-width: 185px !important;
+            max-width: 185px !important;
         }
 
         .box-controle label {
