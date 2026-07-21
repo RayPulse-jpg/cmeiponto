@@ -190,10 +190,16 @@
 
         .box-controle {
             flex: 1;
-            min-width: 250px;
+            min-width: 160px;
             display: flex;
             flex-direction: column;
             gap: 8px;
+        }
+
+        /* Filtro de setor nao precisa ser tao largo */
+        .box-controle:has(#filtro-setor) {
+            max-width: 190px;
+            flex: 0 0 190px;
         }
 
         .box-controle label {
@@ -1723,28 +1729,28 @@
 
         /* ── MODAL GRADE SEMANAL ── */
         .modal-horario-semanal {
-            width: 700px;
+            width: 580px;
             max-width: 97vw;
         }
 
         .grade-semanal-tabela {
-            margin: 16px 0 12px;
+            margin: 12px 0 10px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 5px;
         }
 
         .grade-semanal-header,
         .grade-semanal-linha {
             display: grid;
-            grid-template-columns: 120px 1fr 1fr 1fr 1fr;
-            gap: 8px;
+            grid-template-columns: 90px 1fr 1fr 1fr 1fr;
+            gap: 6px;
             align-items: center;
         }
 
         .grade-semanal-header {
-            padding: 4px 6px;
-            font-size: 11px;
+            padding: 2px 6px;
+            font-size: 10px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.8px;
@@ -1755,7 +1761,7 @@
             background: var(--input-bg, #f8fafc);
             border: 1px solid var(--border-light);
             border-radius: 8px;
-            padding: 6px 10px;
+            padding: 5px 8px;
         }
 
         .grade-semanal-linha:hover {
@@ -1763,7 +1769,7 @@
         }
 
         .grade-dia-label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             color: var(--primary-color);
             white-space: nowrap;
@@ -1771,8 +1777,8 @@
 
         .grade-semanal-linha input[type="time"] {
             width: 100%;
-            padding: 5px 6px;
-            font-size: 13px;
+            padding: 4px 4px;
+            font-size: 12px;
             font-weight: 600;
             text-align: center;
             border: 1px solid var(--border-light);
@@ -1780,6 +1786,7 @@
             background: var(--card-bg, #fff);
             color: var(--text-main);
             letter-spacing: 0.5px;
+            min-width: 0;
         }
 
         [data-theme="dark"] .grade-semanal-linha {
