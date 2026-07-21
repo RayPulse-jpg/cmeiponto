@@ -1712,6 +1712,88 @@
             border-color: var(--border-light);
         }
 
+        /* ── BOTÃO GRADE SEMANAL ── */
+        .btn-semanal {
+            background: linear-gradient(135deg, #0891b2, #0e7490) !important;
+        }
+
+        .btn-semanal:hover {
+            background: linear-gradient(135deg, #0e7490, #155e75) !important;
+        }
+
+        /* ── MODAL GRADE SEMANAL ── */
+        .modal-horario-semanal {
+            width: 700px;
+            max-width: 97vw;
+        }
+
+        .grade-semanal-tabela {
+            margin: 16px 0 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .grade-semanal-header,
+        .grade-semanal-linha {
+            display: grid;
+            grid-template-columns: 120px 1fr 1fr 1fr 1fr;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .grade-semanal-header {
+            padding: 4px 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+        }
+
+        .grade-semanal-linha {
+            background: var(--input-bg, #f8fafc);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 6px 10px;
+        }
+
+        .grade-semanal-linha:hover {
+            border-color: var(--primary-color);
+        }
+
+        .grade-dia-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary-color);
+            white-space: nowrap;
+        }
+
+        .grade-semanal-linha input[type="time"] {
+            width: 100%;
+            padding: 5px 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            border: 1px solid var(--border-light);
+            border-radius: 6px;
+            background: var(--card-bg, #fff);
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+        }
+
+        [data-theme="dark"] .grade-semanal-linha {
+            background: var(--input-bg);
+            border-color: var(--border-light);
+        }
+
+        [data-theme="dark"] .grade-semanal-linha input[type="time"] {
+            background: var(--card-bg);
+            color: var(--text-main);
+            border-color: var(--border-light);
+        }
+
+
         /* ============================================================
            ALTERNADOR DE ABAS (CMEI / EMPRESA)
            ============================================================ */

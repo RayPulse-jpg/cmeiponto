@@ -18,7 +18,8 @@ const TURNOS = {
     PARCIAL_TARDE: "PARCIAL_TARDE",
     MATUTINO: "MATUTINO",
     VESPERTINO: "VESPERTINO",
-    INTEGRAL: "INTEGRAL"
+    INTEGRAL: "INTEGRAL",
+    HORARIO_SEMANAL: "HORARIO_SEMANAL"
 };
 
 const CATEGORIAS = {
@@ -563,8 +564,82 @@ function salvarTurnoCustom() {
 }
 
 // ============================================================
-// GERENCIAMENTO DE SERVIDORES
+// MODAL HORÁRIO SEMANAL
 // ============================================================
+
+const DIAS_SEMANA = [
+    { key: 1, label: 'Segunda-feira' },
+    { key: 2, label: 'Terça-feira' },
+    { key: 3, label: 'Quarta-feira' },
+    { key: 4, label: 'Quinta-feira' },
+    { key: 5, label: 'Sexta-feira' },
+];
+
+function abrirModalHorarioSemanal() {
+    const index = DOM.seletorServidor().value;
+    if (index === '') {
+        mostrarToast('⚠️ Selecione um servidor primeiro.', 'aviso');
+        return;
+    }
+
+    const servidor = bancoServidores[index];
+    const grade = servidor.horarioSemanal || {};
+
+    // Preenche os campos de cada dia
+    DIAS_SEMANA.forEach(({ key }) => {
+        const h = grade[key] || {};
+        const campo = (id) => document.getElementById(`sem-${key}-${id}`);
+        if (campo('entrada-mat')) campo('entrada-mat').value = h.entradaMat || '';
+        if (campo('saida-mat'))   campo('saida-mat').value   = h.saidaMat   || '';
+        if (campo('entrada-vesp')) campo('entrada-vesp').value = h.entradaVesp || '';
+        if (campo('saida-vesp'))  campo('saida-vesp').value  = h.saidaVesp  || '';
+    });
+
+    document.getElementById('modalHorarioSemanal').style.display = 'flex';
+}
+
+function fecharModalHorarioSemanal() {
+    document.getElementById('modalHorarioSemanal').style.display = 'none';
+}
+
+function salvarHorarioSemanal() {
+    const index = DOM.seletorServidor().value;
+    if (index === '') return;
+
+    const grade = {};
+    DIAS_SEMANA.forEach(({ key }) => {
+        const campo = (id) => {
+            const el = document.getElementById(`sem-${key}-${id}`);
+            return el ? el.value.trim() : '';
+        };
+        grade[key] = {
+            entradaMat:  campo('entrada-mat'),
+            saidaMat:    campo('saida-mat'),
+            entradaVesp: campo('entrada-vesp'),
+            saidaVesp:   campo('saida-vesp'),
+        };
+    });
+
+    // Verifica se ao menos um campo foi preenchido
+    const temAlgo = Object.values(grade).some(h =>
+        h.entradaMat || h.saidaMat || h.entradaVesp || h.saidaVesp
+    );
+    if (!temAlgo) {
+        mostrarToast('⚠️ Preencha ao menos um horário.', 'aviso');
+        return;
+    }
+
+    bancoServidores[index].turno = TURNOS.HORARIO_SEMANAL;
+    bancoServidores[index].horarioSemanal = grade;
+
+    salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
+    DOM.seletorTurno().value = TURNOS.HORARIO_SEMANAL;
+    fecharModalHorarioSemanal();
+    gerarFolha();
+    mostrarToast('✅ Grade semanal salva!', 'sucesso');
+}
+
+
 
 function organizarEOrdenarServidores() {
     bancoServidores.sort((a, b) => {
@@ -799,19 +874,25 @@ function desfazerUltimaAcao() {
 // GERAÇÃO DA FOLHA DE PONTO
 // ============================================================
 
-function obterCelulasHoras(turno, servidor) {
+function obterCelulasHoras(turno, servidor, diaDaSemana) {
+    const fmt = (v) => v || '---';
+
+    if (turno === TURNOS.HORARIO_SEMANAL && servidor && servidor.horarioSemanal) {
+        const h = servidor.horarioSemanal[diaDaSemana] || {};
+        return `<td>${fmt(h.entradaMat)}</td><td>${fmt(h.saidaMat)}</td><td>${fmt(h.entradaVesp)}</td><td>${fmt(h.saidaVesp)}</td>`;
+    }
+
     if (turno === TURNOS.CUSTOM && servidor && servidor.horarioCustom) {
         const h = servidor.horarioCustom;
-        const formatHora = (v) => v ? v : '---';
-        return `<td>${formatHora(h.entradaMat)}</td><td>${formatHora(h.saidaMat)}</td><td>${formatHora(h.entradaVesp)}</td><td>${formatHora(h.saidaVesp)}</td>`;
+        return `<td>${fmt(h.entradaMat)}</td><td>${fmt(h.saidaMat)}</td><td>${fmt(h.entradaVesp)}</td><td>${fmt(h.saidaVesp)}</td>`;
     }
 
     const mapas = {
-        [TURNOS.PARCIAL]: '<td>06:30</td><td>10:30</td><td>---</td><td>---</td>',
+        [TURNOS.PARCIAL]:       '<td>06:30</td><td>10:30</td><td>---</td><td>---</td>',
         [TURNOS.PARCIAL_TARDE]: '<td>---</td><td>---</td><td>11:40</td><td>15:40</td>',
-        [TURNOS.MATUTINO]: '<td>08:00</td><td>12:00</td><td>---</td><td>---</td>',
-        [TURNOS.VESPERTINO]: '<td>---</td><td>---</td><td>13:00</td><td>17:00</td>',
-        [TURNOS.INTEGRAL]: '<td>08:00</td><td>12:00</td><td>13:00</td><td>17:00</td>',
+        [TURNOS.MATUTINO]:      '<td>08:00</td><td>12:00</td><td>---</td><td>---</td>',
+        [TURNOS.VESPERTINO]:    '<td>---</td><td>---</td><td>13:00</td><td>17:00</td>',
+        [TURNOS.INTEGRAL]:      '<td>08:00</td><td>12:00</td><td>13:00</td><td>17:00</td>',
     };
     return mapas[turno] || '<td></td><td></td><td></td><td></td>';
 }
@@ -1042,6 +1123,7 @@ function criarLinhaDiaUtil(dia, ano, mes, turnoAtual, nomeAtual, isSabadoAberto,
     tr.setAttribute('tabindex', '0');
     tr.setAttribute('role', 'button');
 
+    const diaDaSemana = new Date(ano, mes - 1, dia).getDay();
     const chaveGeral = `feriado_${ano}_${mes}_${dia}`;
     const chaveIndiv = `ausencia_${nomeAtual}_${ano}_${mes}_${dia}`;
     const dadosGeral = memoriaNuvem[chaveGeral];
@@ -1064,7 +1146,7 @@ function criarLinhaDiaUtil(dia, ano, mes, turnoAtual, nomeAtual, isSabadoAberto,
     } else {
         tr.setAttribute('data-estado-geral', '0');
         tr.setAttribute('data-estado-individual', '0');
-        tr.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual, servidor) + '<td></td>';
+        tr.innerHTML = celulaDiaHtml + obterCelulasHoras(turnoAtual, servidor, diaDaSemana) + '<td></td>';
     }
 
     tr.onclick = function () { alternarFeriadoGeral(this, ano, mes, dia, celulaDiaHtml); };
@@ -1113,16 +1195,29 @@ function gerarFolha() {
 // FOLHA ATENA - FUNÇÕES
 // ============================================================
 
-function obterCelulasHorasAtena(turno, servidor) {
+function obterCelulasHorasAtena(turno, servidor, diaDaSemana) {
+    const fmt = (v) => v || '---';
+
+    if (turno === TURNOS.HORARIO_SEMANAL && servidor && servidor.horarioSemanal) {
+        const h = servidor.horarioSemanal[diaDaSemana] || {};
+        const ambos = h.entradaMat && h.saidaMat && h.entradaVesp && h.saidaVesp;
+        const entrada = h.entradaMat || h.entradaVesp || '---';
+        const saida = h.saidaVesp || h.saidaMat || '---';
+        const inicioInt = ambos ? fmt(h.saidaMat) : '---';
+        const fimInt = ambos ? fmt(h.entradaVesp) : '---';
+        return `<td>${entrada}</td><td>${inicioInt}</td><td>${fimInt}</td><td>${saida}</td><td></td>`;
+    }
+
     if (turno === TURNOS.CUSTOM && servidor && servidor.horarioCustom) {
         const h = servidor.horarioCustom;
         const ambos = h.entradaMat && h.saidaMat && h.entradaVesp && h.saidaVesp;
         const entrada = h.entradaMat || h.entradaVesp || '---';
         const saida = h.saidaVesp || h.saidaMat || '---';
-        const inicioInt = ambos ? h.saidaMat : '---';
-        const fimInt = ambos ? h.entradaVesp : '---';
+        const inicioInt = ambos ? fmt(h.saidaMat) : '---';
+        const fimInt = ambos ? fmt(h.entradaVesp) : '---';
         return `<td>${entrada}</td><td>${inicioInt}</td><td>${fimInt}</td><td>${saida}</td><td></td>`;
     }
+
     const mapas = {
         [TURNOS.INTEGRAL]:      '<td>08:00</td><td>12:00</td><td>13:00</td><td>17:00</td><td></td>',
         [TURNOS.MATUTINO]:      '<td>08:00</td><td>---</td><td>---</td><td>12:00</td><td></td>',
@@ -1245,6 +1340,7 @@ function criarLinhaDiaUtilAtena(dia, ano, mes, turnoAtual, nomeAtual, isSabadoAb
     tr.setAttribute('tabindex', '0');
     tr.setAttribute('role', 'button');
 
+    const diaDaSemana = new Date(ano, mes - 1, dia).getDay();
     const chaveGeral = `feriado_${ano}_${mes}_${dia}`;
     const chaveIndiv = `ausencia_${nomeAtual}_${ano}_${mes}_${dia}`;
     const dadosGeral = memoriaNuvem[chaveGeral];
@@ -1267,7 +1363,7 @@ function criarLinhaDiaUtilAtena(dia, ano, mes, turnoAtual, nomeAtual, isSabadoAb
     } else {
         tr.setAttribute('data-estado-geral', '0');
         tr.setAttribute('data-estado-individual', '0');
-        tr.innerHTML = celulaDiaHtml + obterCelulasHorasAtena(turnoAtual, servidor) + '<td></td>';
+        tr.innerHTML = celulaDiaHtml + obterCelulasHorasAtena(turnoAtual, servidor, diaDaSemana) + '<td></td>';
     }
 
     tr.onclick = function () { alternarFeriadoGeralAtena(this, ano, mes, dia, celulaDiaHtml); };
@@ -1964,6 +2060,23 @@ document.addEventListener('DOMContentLoaded', function () {
     if (modalTurnoCustom) {
         modalTurnoCustom.addEventListener('click', function (e) {
             if (e.target === this) fecharModalTurnoCustom();
+        });
+    }
+
+    // Modal Grade Horária Semanal
+    const btnHorarioSemanal = document.getElementById('btn-horario-semanal');
+    if (btnHorarioSemanal) btnHorarioSemanal.addEventListener('click', abrirModalHorarioSemanal);
+
+    const btnCancelarHorarioSemanal = document.getElementById('btn-cancelar-horario-semanal');
+    if (btnCancelarHorarioSemanal) btnCancelarHorarioSemanal.addEventListener('click', fecharModalHorarioSemanal);
+
+    const btnSalvarHorarioSemanal = document.getElementById('btn-salvar-horario-semanal');
+    if (btnSalvarHorarioSemanal) btnSalvarHorarioSemanal.addEventListener('click', salvarHorarioSemanal);
+
+    const modalHorarioSemanal = document.getElementById('modalHorarioSemanal');
+    if (modalHorarioSemanal) {
+        modalHorarioSemanal.addEventListener('click', function (e) {
+            if (e.target === this) fecharModalHorarioSemanal();
         });
     }
 

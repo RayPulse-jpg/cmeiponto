@@ -96,6 +96,7 @@
                     <select id="seletor-turno" class="destaque-turno">
                         <option value="MANUAL">✏️ Manual</option>
                         <option value="CUSTOM">⚙️ Customizado</option>
+                        <option value="HORARIO_SEMANAL">📅 Grade Semanal</option>
                         <option value="PARCIAL">🌅 Parcial Cedo</option>
                         <option value="PARCIAL_TARDE">🌇 Parcial Tarde</option>
                         <option value="MATUTINO">🌅 Matutino</option>
@@ -103,6 +104,7 @@
                         <option value="INTEGRAL">☀️ Integral</option>
                     </select>
                     <button id="btn-turno-custom" class="btn-custom-horario" title="Definir horários customizados para este servidor">⚙️ Horários</button>
+                    <button id="btn-horario-semanal" class="btn-custom-horario btn-semanal" title="Definir grade horária por dia da semana">📅 Grade</button>
                 </div>
             </div>
 
@@ -256,6 +258,62 @@
             <div class="modal-botoes">
                 <button class="btn-cancelar" id="btn-cancelar-turno-custom">Cancelar</button>
                 <button class="btn-add" id="btn-salvar-turno-custom">✅ Aplicar Horários</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Grade Horária Semanal -->
+    <div id="modalHorarioSemanal" class="modal-overlay">
+        <div class="modal-content modal-horario-semanal">
+            <h3>📅 Grade Horária por Dia da Semana</h3>
+            <p class="modal-desc">Defina um horário específico para cada dia da semana. Deixe em branco para exibir <strong>---</strong> na folha.</p>
+            <div class="grade-semanal-tabela">
+                <div class="grade-semanal-header">
+                    <span>Dia</span>
+                    <span>Entrada Mat.</span>
+                    <span>Saída Mat.</span>
+                    <span>Entrada Vesp.</span>
+                    <span>Saída Vesp.</span>
+                </div>
+                <div class="grade-semanal-linha">
+                    <span class="grade-dia-label">🗓 Segunda</span>
+                    <input type="time" id="sem-1-entrada-mat">
+                    <input type="time" id="sem-1-saida-mat">
+                    <input type="time" id="sem-1-entrada-vesp">
+                    <input type="time" id="sem-1-saida-vesp">
+                </div>
+                <div class="grade-semanal-linha">
+                    <span class="grade-dia-label">🗓 Terça</span>
+                    <input type="time" id="sem-2-entrada-mat">
+                    <input type="time" id="sem-2-saida-mat">
+                    <input type="time" id="sem-2-entrada-vesp">
+                    <input type="time" id="sem-2-saida-vesp">
+                </div>
+                <div class="grade-semanal-linha">
+                    <span class="grade-dia-label">🗓 Quarta</span>
+                    <input type="time" id="sem-3-entrada-mat">
+                    <input type="time" id="sem-3-saida-mat">
+                    <input type="time" id="sem-3-entrada-vesp">
+                    <input type="time" id="sem-3-saida-vesp">
+                </div>
+                <div class="grade-semanal-linha">
+                    <span class="grade-dia-label">🗓 Quinta</span>
+                    <input type="time" id="sem-4-entrada-mat">
+                    <input type="time" id="sem-4-saida-mat">
+                    <input type="time" id="sem-4-entrada-vesp">
+                    <input type="time" id="sem-4-saida-vesp">
+                </div>
+                <div class="grade-semanal-linha">
+                    <span class="grade-dia-label">🗓 Sexta</span>
+                    <input type="time" id="sem-5-entrada-mat">
+                    <input type="time" id="sem-5-saida-mat">
+                    <input type="time" id="sem-5-entrada-vesp">
+                    <input type="time" id="sem-5-saida-vesp">
+                </div>
+            </div>
+            <div class="modal-botoes">
+                <button class="btn-cancelar" id="btn-cancelar-horario-semanal">Cancelar</button>
+                <button class="btn-add" id="btn-salvar-horario-semanal">✅ Salvar Grade</button>
             </div>
         </div>
     </div>
