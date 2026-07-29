@@ -1,26 +1,27 @@
-# CMEI - Gerador de Folha de Ponto
+# AutomaPonto (Versão de Portfólio / Demo)
 
 [![License: Institutional](https://img.shields.io/badge/License-Institutional-blue.svg)](LICENSE)
-[![Firebase](https://img.shields.io/badge/Powered%20By-Firebase-orange.svg)](https://firebase.google.com/)
+[![LocalStorage](https://img.shields.io/badge/Storage-Local-green.svg)](#)
 [![PWA](https://img.shields.io/badge/PWA-Ready-green.svg)](manifest.json)
 
-Sistema oficial de geração e gerenciamento de folhas de ponto desenvolvido para o **CMEI Maria Jandira de Sousa Fonseca**. Esta ferramenta digitaliza o processo de controle de frequência, garantindo precisão, agilidade e segurança no armazenamento de dados dos servidores.
+> **⚠️ AVISO IMPORTANTE:** Este repositório contém a versão de demonstração (portfólio) do AutomaPonto. Para garantir a segurança dos dados e preservar as chaves de acesso, o backend em Firebase foi removido desta versão. Ela utiliza o `localStorage` do navegador para simular o banco de dados. Qualquer alteração feita aqui fica salva apenas no seu próprio navegador e não afeta o sistema real de produção.
+
+Sistema de geração e gerenciamento de folhas de ponto desenvolvido originalmente para o **CMEI Maria Jandira de Sousa Fonseca**. Esta ferramenta digitaliza o processo de controle de frequência, garantindo precisão, agilidade e segurança no armazenamento de dados dos servidores.
 
 ---
 
-## 🚀 Funcionalidades Principais
+## 🚀 Funcionalidades Demonstradas
 
 - **📋 Gestão de Servidores**: Cadastro completo por setor (Administrativo, Professoras, Monitoras e Apoio).
-- **⏰ Automação de Turnos**: Preenchimento automático de horários (Matutino, Vespertino, Integral) ou inserção Manual.
+- **⏰ Automação de Turnos**: Preenchimento automático de horários (Matutino, Vespertino, Integral, Grade Semanal Dinâmica) ou inserção Manual.
 - **🛠️ Atalhos de Marcação**:
   - `Clique Esquerdo`: Marcação rápida de **Recesso**.
   - `Clique Direito`: Marcação rápida de **Atestado**.
   - `Edição Especial`: Clique em um Sábado para abrir a linha para edição.
 - **🖨️ Impressão e Lote**:
-  - Layout otimizado para os padrões oficiais da unidade.
+  - Layout otimizado para os padrões oficiais da unidade (Folha Padrão e Folha Atena).
   - Opção de impressão individual ou de todos os servidores simultaneamente.
-- **☁️ Sincronização em Nuvem**: Dados sincronizados via Firebase para acesso de diferentes dispositivos.
-- **📱 Versão Mobile (PWA)**: Pode ser instalado no celular ou tablet para uso mais prático no dia a dia da unidade.
+- **📱 Versão Mobile (PWA)**: Pode ser instalado no celular ou tablet para uso mais prático.
 - **📂 Exportação e Segurança**:
   - Exportação para planilha **Excel**.
   - Sistema robusto de backup e restauração via JSON.
@@ -29,42 +30,33 @@ Sistema oficial de geração e gerenciamento de folhas de ponto desenvolvido par
 
 ## 🏗️ Estrutura do Projeto
 
-O projeto utiliza tecnologias web leves e modernas para garantir velocidade e facilidade de manutenção:
+O projeto utiliza tecnologias web leves e modernas:
 
 - `index.html`: Dashboard administrativo e visualização de folhas.
-- `login.html`: Portal de acesso restrito para administradores.
-- `style.css`: Estilização completa com suporte a modo escuro.
-- `script.js`: "Cérebro" do sistema, cuidando da lógica e integração com nuvem.
+- `login.html`: Portal de acesso de demonstração.
+- `style.css`: Estilização completa com suporte a modo escuro e design responsivo.
+- `script.js`: "Cérebro" do sistema, cuidando da lógica e simulação de banco de dados (`localStorage`).
 - `sw.js` & `manifest.json`: Arquivos que permitem o funcionamento como aplicativo (PWA).
 
-### Especificações Técnicas
+### Especificações Técnicas (Demo)
 - **Plataforma**: Web Progressiva (PWA).
 - **Tecnologias**: HTML5, CSS3 Puro, JavaScript Vanilla.
-- **Persistência**: Firebase Realtime Database.
-- **Autenticação**: Firebase Authentication.
+- **Persistência**: Memória Local (`window.localStorage`).
+- **Autenticação**: Simulada (Mock).
 
 ---
 
-## 🔧 Configuração e Uso
+## 🔧 Como Testar
 
-### Para Administradores (Setup do Firebase)
-Para utilizar este gerador em uma nova unidade, é necessário configurar uma instância do Firebase:
-1. Configure um projeto no [Firebase Console](https://console.firebase.google.com/).
-2. Ative as chaves de API no arquivo `script.js`.
-3. Garanta que as regras do banco de dados permitam leitura/escrita autenticada.
-
-### Para Usuários
-1. Acesse o sistema via navegador.
-2. Para instalar, procure a opção "Adicionar à tela de início" ou o ícone de instalação na barra de endereços.
-3. Selecione o servidor, o período (mês/ano) e o turno desejado.
-4. Realize as marcações clicando sobre os dias necessários.
-5. Imprima a folha finalizada.
+1. Acesse o [Link da Demonstração no GitHub Pages](https://raypulse-jpg.github.io/cmeiponto/login.html).
+2. Clique no botão "Acessar Demonstração".
+3. Explore as funcionalidades, adicione ou remova servidores, imprima folhas e faça testes. Ao recarregar a página, seus testes continuarão salvos no seu navegador atual.
 
 ---
 
 ## 📄 Licença e Créditos
 
-Este sistema é uma ferramenta de uso institucional exclusiva para o **CMEI Maria Jandira de Sousa Fonseca**.
+Este sistema foi originalmente projetado para o **CMEI Maria Jandira de Sousa Fonseca**.
 Fátima - Bahia | CNPJ: 24.755.198/0001-81
 
 ---

@@ -1,0 +1,5 @@
+# Impede que regras do .htaccess pai interfiram nesta pasta
+Options -Indexes
+
+# Desabilita qualquer rewrite herdado do site principal
+RewriteEngine Off

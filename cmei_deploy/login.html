@@ -16,6 +16,9 @@
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="logo.png">
 
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
 
     <link rel="stylesheet" href="style.css?v=4">
 </head>
@@ -33,16 +36,18 @@
                 <!-- COLUNA DIREITA: FORMULÁRIO -->
                 <div class="login-form-area">
                     <div class="login-logo-mobile">AutomaPonto</div>
-                    <h3>Portfólio Demo</h3>
-                    <p class="login-subtitle">Acesso Visitante (Sem Banco de Dados)</p>
-                    <button class="btn-login-gradient" onclick="fazerLogin()">Acessar Demonstração</button>
-                    <div id="mensagem-erro" aria-live="polite"></div>
+                    <h3>Faça seu Login</h3>
+                    <p class="login-subtitle">Acesso Restrito à Secretaria</p>
+                    <input type="email" id="login-email" placeholder="E-mail de acesso">
+                    <input type="password" id="login-senha" placeholder="Senha">
+                    <button class="btn-login-gradient">Entrar no Sistema</button>
+                    <div id="mensagem-erro" aria-live="polite">Usuário ou senha incorretos.</div>
                 </div>
             </div>
         </div>
     </div>
 
-
+    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
 </body>
 

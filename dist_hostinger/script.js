@@ -92,8 +92,17 @@ const DOM = {
 };
 
 // ============================================================
-// PORTFÓLIO DEMO — LOCAL STORAGE
+// FIREBASE — config carregada via firebase-config.js (ver index.html)
 // ============================================================
+
+// firebaseConfig é definido em firebase-config.js (arquivo local, não versionado)
+if (typeof firebaseConfig === 'undefined') {
+    console.error('❌ firebase-config.js não encontrado. Copie firebase-config.example.js para firebase-config.js e preencha suas credenciais.');
+}
+
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const auth = firebase.auth();
 
 // ============================================================
 // ESTADO GLOBAL
@@ -230,17 +239,15 @@ function esconderCarregamento() {
 
 const isLoginPage = window.location.pathname.includes('login.html');
 
-function checarAutenticacaoDemo() {
-    const isLogged = localStorage.getItem('isDemoLogged') === 'true';
-
-    if (isLogged) {
+auth.onAuthStateChanged((user) => {
+    if (user) {
         if (isLoginPage) {
             window.location.href = 'index.html';
         } else {
             const telaLogin = DOM.telaLogin();
             if (telaLogin) telaLogin.style.display = 'none';
             mostrarCarregamento();
-            carregarDadosDaNuvem(); // Nuvem simulada (LocalStorage)
+            carregarDadosDaNuvem();
             iniciarTimerInatividade();
         }
     } else {
@@ -253,24 +260,44 @@ function checarAutenticacaoDemo() {
             esconderCarregamento();
         }
     }
-}
-
-// Roda a checagem ao abrir
-document.addEventListener('DOMContentLoaded', checarAutenticacaoDemo);
+});
 
 function fazerLogin() {
-    // Login simulado
-    localStorage.setItem('isDemoLogged', 'true');
-    window.location.href = 'index.html';
+    const email = DOM.loginEmail().value.trim();
+    const senha = DOM.loginSenha().value;
+    const msgErro = DOM.mensagemErro();
+
+    if (!email || !senha) {
+        msgErro.textContent = "Preencha o e-mail e a senha.";
+        msgErro.style.display = 'block';
+        return;
+    }
+
+    auth.signInWithEmailAndPassword(email, senha)
+        .then(() => {
+            msgErro.style.display = 'none';
+        })
+        .catch((error) => {
+            const mensagens = {
+                'auth/network-request-failed': "Bloqueado por Segurança. Teste através do link do GitHub!",
+                'auth/api-key-not-valid': "Bloqueado por Segurança. Teste através do link do GitHub!",
+                'auth/too-many-requests': "Muitas tentativas. Tente novamente mais tarde.",
+                'auth/user-not-found': "Usuário não encontrado."
+            };
+            msgErro.textContent = mensagens[error.code] || "E-mail ou senha incorretos!";
+            msgErro.style.display = 'block';
+        });
 }
 
 function fazerLogout() {
     pararTimerInatividade();
-    localStorage.removeItem('isDemoLogged');
-    memoriaNuvem = {};
-    bancoServidores = [];
-    historicoAcoes = [];
-    window.location.href = 'login.html';
+    auth.signOut().then(() => {
+        memoriaNuvem = {};
+        bancoServidores = [];
+        historicoAcoes = [];
+        const inputSenha = DOM.loginSenha();
+        if (inputSenha) inputSenha.value = '';
+    });
 }
 
 // ============================================================
@@ -313,15 +340,23 @@ function resetarTimerInatividade() {
 function salvarNaNuvem(chave, valor) {
     memoriaNuvem[chave] = valor;
     mostrarSalvando();
-    localStorage.setItem('cmei_dados', JSON.stringify(memoriaNuvem));
-    setTimeout(mostrarSalvo, 300); // Simular delay
+    database.ref('cmei_dados/' + chave).set(valor)
+        .then(() => mostrarSalvo())
+        .catch(() => {
+            const el = DOM.statusNuvem();
+            if (el) { el.textContent = '❌ Erro'; el.classList.remove('salvando'); }
+        });
 }
 
 function removerDaNuvem(chave) {
     delete memoriaNuvem[chave];
     mostrarSalvando();
-    localStorage.setItem('cmei_dados', JSON.stringify(memoriaNuvem));
-    setTimeout(mostrarSalvo, 300);
+    database.ref('cmei_dados/' + chave).remove()
+        .then(() => mostrarSalvo())
+        .catch(() => {
+            const el = DOM.statusNuvem();
+            if (el) { el.textContent = '❌ Erro'; el.classList.remove('salvando'); }
+        });
 }
 
 /**
@@ -354,43 +389,36 @@ function migrarCategoriasLegadas(servidores) {
 }
 
 function carregarDadosDaNuvem() {
-    const dadosSalvos = localStorage.getItem('cmei_dados');
-    if (dadosSalvos) {
-        memoriaNuvem = JSON.parse(dadosSalvos);
-    } else {
-        memoriaNuvem = {};
-    }
+    database.ref('cmei_dados').once('value')
+        .then((snapshot) => {
+            memoriaNuvem = snapshot.val() || {};
 
-    if (memoriaNuvem['listaServidores']) {
-        bancoServidores = JSON.parse(memoriaNuvem['listaServidores']);
-        if (migrarCategoriasLegadas(bancoServidores)) {
-            salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
-        }
-    } else {
-        bancoServidores = [
-            {
-                nome: "FERNANDA DE JESUS ALMEIDA",
-                cpf: "049.131.865-07",
-                cargo: "AUXILIAR DE COORDENAÇÃO",
-                categoria: CATEGORIAS.ADMINISTRATIVO,
-                turno: TURNOS.MANUAL
-            },
-            {
-                nome: "JOÃO VISITANTE (DEMO)",
-                cpf: "111.222.333-44",
-                cargo: "PROFESSOR",
-                categoria: CATEGORIAS.PROFESSORAS,
-                turno: TURNOS.MATUTINO
+            if (memoriaNuvem['listaServidores']) {
+                bancoServidores = JSON.parse(memoriaNuvem['listaServidores']);
+                if (migrarCategoriasLegadas(bancoServidores)) {
+                    salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
+                }
+            } else {
+                bancoServidores = [{
+                    nome: "FERNANDA DE JESUS ALMEIDA",
+                    cpf: "049.131.865-07",
+                    cargo: "AUXILIAR DE COORDENAÇÃO",
+                    categoria: CATEGORIAS.ADMINISTRATIVO,
+                    turno: TURNOS.MANUAL
+                }];
             }
-        ];
-        salvarNaNuvem('listaServidores', JSON.stringify(bancoServidores));
-    }
 
-    esconderCarregamento();
-    carregarListaServidores();
-    carregarDadosEditaveis();
-    aplicarCabecalho(memoriaNuvem['configuracoes_cabecalho'] ? JSON.parse(memoriaNuvem['configuracoes_cabecalho']) : null);
-    gerarFolha();
+            esconderCarregamento();
+            carregarListaServidores();
+            carregarDadosEditaveis();
+            aplicarCabecalho(memoriaNuvem['configuracoes_cabecalho'] ? JSON.parse(memoriaNuvem['configuracoes_cabecalho']) : null);
+            gerarFolha();
+        })
+        .catch((err) => {
+            console.error("Erro ao conectar no banco de dados:", err);
+            mostrarToast("❌ Erro ao conectar no banco de dados. Verifique sua conexão.", "erro", 6000);
+            esconderCarregamento();
+        });
 }
 
 // ============================================================
@@ -1569,9 +1597,15 @@ function importarBackup(evento) {
 
             mostrarCarregamento("☢️ Restaurando Backup e validando dados...");
 
-            localStorage.setItem('cmei_dados', JSON.stringify(dados));
-            mostrarToast("✅ Backup restaurado! Recarregando...", "sucesso", 3000);
-            setTimeout(() => location.reload(), 1500);
+            database.ref('cmei_dados').set(dados)
+                .then(() => {
+                    mostrarToast("✅ Backup restaurado! Recarregando...", "sucesso", 3000);
+                    setTimeout(() => location.reload(), 1500);
+                })
+                .catch((err) => {
+                    console.error("Erro ao restaurar backup:", err);
+                    mostrarToast("❌ Erro ao salvar no banco de dados!", "erro");
+                });
         } catch (err) {
             console.error("Erro ao ler arquivo de backup:", err);
             mostrarToast("❌ Arquivo inválido! Certifique-se de que é um JSON válido.", "erro");
