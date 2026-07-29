@@ -237,28 +237,18 @@ function esconderCarregamento() {
 // AUTENTICAÇÃO
 // ============================================================
 
-const isLoginPage = window.location.pathname.includes('login.html');
-
 auth.onAuthStateChanged((user) => {
     if (user) {
-        if (isLoginPage) {
-            window.location.href = 'index.html';
-        } else {
-            const telaLogin = DOM.telaLogin();
-            if (telaLogin) telaLogin.style.display = 'none';
-            mostrarCarregamento();
-            carregarDadosDaNuvem();
-            iniciarTimerInatividade();
-        }
+        const telaLogin = DOM.telaLogin();
+        if (telaLogin) telaLogin.style.display = 'none';
+        mostrarCarregamento();
+        carregarDadosDaNuvem();
+        iniciarTimerInatividade();
     } else {
         pararTimerInatividade();
-        if (!isLoginPage) {
-            window.location.href = 'login.html';
-        } else {
-            const telaLogin = DOM.telaLogin();
-            if (telaLogin) telaLogin.style.display = 'flex';
-            esconderCarregamento();
-        }
+        const telaLogin = DOM.telaLogin();
+        if (telaLogin) telaLogin.style.display = 'flex';
+        esconderCarregamento();
     }
 });
 
