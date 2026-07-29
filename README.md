@@ -6,7 +6,7 @@
 
 > **⚠️ AVISO IMPORTANTE:** Este repositório contém a versão de demonstração (portfólio) do AutomaPonto. Para garantir a segurança dos dados e preservar as chaves de acesso, o backend em Firebase foi removido desta versão. Ela utiliza o `localStorage` do navegador para simular o banco de dados. Qualquer alteração feita aqui fica salva apenas no seu próprio navegador e não afeta o sistema real de produção.
 
-Sistema de geração e gerenciamento de folhas de ponto desenvolvido originalmente para o **CMEI Maria Jandira de Sousa Fonseca**. Esta ferramenta digitaliza o processo de controle de frequência, garantindo precisão, agilidade e segurança no armazenamento de dados dos servidores.
+Sistema de geração e gerenciamento de folhas de ponto desenvolvido originalmente para uso institucional (Escola Infantil Modelo). Esta ferramenta digitaliza o processo de controle de frequência, garantindo precisão, agilidade e segurança no armazenamento de dados dos servidores.
 
 ---
 
@@ -56,8 +56,8 @@ O projeto utiliza tecnologias web leves e modernas:
 
 ## 📄 Licença e Créditos
 
-Este sistema foi originalmente projetado para o **CMEI Maria Jandira de Sousa Fonseca**.
-Fátima - Bahia | CNPJ: 24.755.198/0001-81
+Este sistema foi originalmente projetado para uso institucional.
+Cidade - UF | CNPJ: 00.000.000/0000-00
 
 ---
 **CMEI - Gerador de Folha de Ponto &copy; 2026** - *Inovação na Gestão Escolar.*

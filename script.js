@@ -421,9 +421,9 @@ function revelarBackup() {
 // ============================================================
 
 const CABECALHO_PADRAO = {
-    nomeEscola: 'CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL MARIA JANDIRA DE SOUSA FONSECA',
-    endereco: 'Rua Maria Madalena \u2013 Centro \u2013 Cep: 48.415-000 | Fátima - Bahia',
-    emailCnpj: 'E-mail: mariajandira2015@hotmail.com | CNPJ: 24.755.198/0001-81',
+    nomeEscola: 'ESCOLA MODELO DE EDUCAÇÃO INFANTIL (DEMO)',
+    endereco: 'Rua Exemplo – Centro – Cep: 00.000-000 | Cidade - UF',
+    emailCnpj: 'E-mail: escola@demo.com | CNPJ: 00.000.000/0000-00',
     diretoraNome: 'JOSEFA MARCIANIA DO NASCIMENTO SILVA',
     diretoraCargo: 'Diretora'
 };
@@ -1775,9 +1775,9 @@ function imprimirRelacaoFuncionarios() {
             <div class="relacao-cabecalho">
                 <img src="logo.png" alt="Logo" onerror="this.style.display='none'">
                 <div class="relacao-cabecalho-textos">
-                    <h3>CENTRO MUNICIPAL DE EDUCAÇÃO INFANTIL MARIA JANDIRA DE SOUSA FONSECA</h3>
-                    <p>Rua Maria Madalena – Centro – Cep: 48.415-000 | Fátima - Bahia</p>
-                    <p>E-mail: mariajandira2015@hotmail.com | CNPJ: 24.755.198/0001-81</p>
+                    <h3>ESCOLA MODELO DE EDUCAÇÃO INFANTIL (DEMO)</h3>
+                    <p>Rua Exemplo - Centro - Cep: 00.000-000 | Cidade - UF</p>
+                    <p>E-mail: escola@demo.com | CNPJ: 00.000.000/0000-00</p>
                     <h2>RELAÇÃO DE FUNCIONÁRIOS — ${escapeHtml(tituloSetor)}</h2>
                     <p style="font-size:11px; margin-top:4px;">Emitido em: ${dataAtual} &nbsp;|&nbsp; Total: <strong>${servidoresFiltrados.length} funcionário(s)</strong></p>
                 </div>
