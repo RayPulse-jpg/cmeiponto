@@ -34,8 +34,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
-    // Firebase e APIs externas — sempre network
-    if (url.hostname.includes('firebase') || url.hostname.includes('gstatic')) {
+    // Firebase e APIs externas — sempre network e ignorar métodos POST/PUT
+    if (event.request.method !== 'GET' || url.hostname.includes('firebase') || url.hostname.includes('gstatic') || url.hostname.includes('googleapis')) {
         event.respondWith(fetch(event.request));
         return;
     }
