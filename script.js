@@ -92,23 +92,13 @@ const DOM = {
 };
 
 // ============================================================
-// FIREBASE
+// FIREBASE — config carregada via firebase-config.js (ver index.html)
 // ============================================================
 
-const pt1 = "REMOVED_KEY_A";
-const pt2 = "REMOVED_KEY_B";
-const pt3 = "REMOVED_KEY_C";
-
-const firebaseConfig = {
-    apiKey: pt1 + pt2 + pt3,
-    authDomain: "folha-de-ponto-cmei.firebaseapp.com",
-    databaseURL: "https://folha-de-ponto-cmei-default-rtdb.firebaseio.com",
-    projectId: "folha-de-ponto-cmei",
-    storageBucket: "folha-de-ponto-cmei.firebasestorage.app",
-    messagingSenderId: "363750832405",
-    appId: "1:363750832405:web:d0050043e6f2b4fde1111c",
-    measurementId: "G-L5VZDVXHG6"
-};
+// firebaseConfig é definido em firebase-config.js (arquivo local, não versionado)
+if (typeof firebaseConfig === 'undefined') {
+    console.error('❌ firebase-config.js não encontrado. Copie firebase-config.example.js para firebase-config.js e preencha suas credenciais.');
+}
 
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
