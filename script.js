@@ -369,9 +369,9 @@ function carregarDadosDaNuvem() {
     } else {
         bancoServidores = [
             {
-                nome: "FERNANDA DE JESUS ALMEIDA",
-                cpf: "049.131.865-07",
-                cargo: "AUXILIAR DE COORDENAÇÃO",
+                nome: "MARIA DA SILVA (DEMO)",
+                cpf: "000.000.000-00",
+                cargo: "AUXILIAR ADMINISTRATIVO",
                 categoria: CATEGORIAS.ADMINISTRATIVO,
                 turno: TURNOS.MANUAL
             },
