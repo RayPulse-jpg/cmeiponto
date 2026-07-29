@@ -3,3 +3,8 @@ Options -Indexes
 
 # Desabilita qualquer rewrite herdado do site principal
 RewriteEngine Off
+
+<IfModule mod_headers.c>
+    # Politica de Seguranca de Conteudo (CSP) - Bloqueia scripts e conexoes externas nao autorizadas
+    Header set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.firebaseio.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'; form-action 'self';"
+</IfModule>
